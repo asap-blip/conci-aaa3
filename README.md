@@ -9,14 +9,20 @@ Targeted hardening + operator-UX cleanup for the n8n Telegram concierge bot.
 docs/PLAN.md                          full A–J plan: audit, product changes,
                                       persistence model, data model, mutation
                                       rules, callback safety, migration, risks
+docs/CUTOVER.md                       static-data -> Supabase cutover + staging runbook
 db/README.md                          DB runbook: export / close / archive
 db/migrations/0001_operational_ledger.sql   schema + append-only events + pending_actions
 db/migrations/0002_mutation_rpcs.sql         deterministic accounting + callback RPCs
 db/migrations/0003_export_archive.sql        export views + close/archive
+db/migrations/0004_state_bridge.sql          state doc + load/save bridge + materialize
 n8n/concierge.original.workflow.json   baseline workflow (version control)
 n8n/concierge.hardened.workflow.json   patched workflow (operator UX)
-n8n/patch_workflow.py                  deterministic, assertion-guarded patcher
+n8n/concierge.supabase.workflow.json   hardened + cut over to Supabase state bridge
+n8n/patch_workflow.py                  operator-UX patcher (assertion-guarded)
+n8n/build_supabase_workflow.py         static-data -> Supabase transform (assertion-guarded)
 n8n/lib/*.js                           Code-node source modules
+scripts/import_backup.mjs              one-time `c backup` JSON -> Supabase loader
+scripts/test_cutover.mjs               offline harness for the cutover wiring (19 checks)
 ```
 
 ## What changed in this pass

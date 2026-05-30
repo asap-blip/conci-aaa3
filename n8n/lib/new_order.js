@@ -52,7 +52,7 @@ function parseForm(rawText) {
 function parseFreeformLocal(rawText) {
   let s = (rawText || '').trim().toLowerCase().replace(/,/g, ' ');
   s = s.replace(/(\d+)([a-z])/g, '$1 $2'); // split 2c -> 2 c
-  const toks = s.split(/\s+/).filter(Boolean);
+  const toks = mergeHalfProducts(s.split(/\s+/).filter(Boolean));
   if (toks.length === 0) return { ok: false };
 
   const name = toks.shift();
@@ -90,7 +90,7 @@ function parseFreeformLocal(rawText) {
 // ---- shared item parser ----------------------------------------------------
 function parseItems(orderLine) {
   let s = (orderLine || '').toLowerCase().replace(/,/g, ' ').replace(/(\d+)([a-z])/g, '$1 $2');
-  const toks = s.split(/\s+/).filter(Boolean);
+  const toks = mergeHalfProducts(s.split(/\s+/).filter(Boolean));
   const items = [];
   let i = 0;
   while (i < toks.length) {
@@ -100,6 +100,17 @@ function parseItems(orderLine) {
     else i += 1;
   }
   return items;
+}
+
+// Re-merge half-products ('50p'/'50c'/'50k') split by the (\d+)([a-z]) pass.
+function mergeHalfProducts(toks) {
+  const out = [];
+  for (let i = 0; i < toks.length; i++) {
+    if (toks[i] === '50' && (toks[i + 1] === 'p' || toks[i + 1] === 'c' || toks[i + 1] === 'k')) {
+      out.push('50' + toks[i + 1]); i++;
+    } else { out.push(toks[i]); }
+  }
+  return out;
 }
 
 function toIntOrNull(v) { const n = parseInt(v, 10); return isNaN(n) ? null : n; }

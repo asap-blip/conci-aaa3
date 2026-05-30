@@ -230,6 +230,21 @@ code = replace_once(code,
     price: (formPriceLine && !isNaN(parseInt(formPriceLine, 10))) ? parseInt(formPriceLine, 10) : null,""",
 "form-price-use")
 
+# fix latent half-product bug: the (\d+)([a-z]) split turns '50p' into '50 p'.
+# Re-merge '50'+('p'|'c'|'k') so form-style '2 50p' parses as product 50p qty 2.
+code = replace_once(code,
+"  var itemTokens = formOrderRaw.split(/\\s+/).filter(function(t){return t.length>0;});",
+"""  var itemTokens = formOrderRaw.split(/\\s+/).filter(function(t){return t.length>0;});
+  // re-merge half-products split by the (\\d+)([a-z]) normalization above
+  var __merged = [];
+  for (var __mi = 0; __mi < itemTokens.length; __mi++) {
+    if (itemTokens[__mi] === '50' && (itemTokens[__mi+1] === 'p' || itemTokens[__mi+1] === 'c' || itemTokens[__mi+1] === 'k')) {
+      __merged.push('50' + itemTokens[__mi+1]); __mi++;
+    } else { __merged.push(itemTokens[__mi]); }
+  }
+  itemTokens = __merged;""",
+"form-halfproduct-fix")
+
 # the card line still says [no price]; make it reflect parsed price
 code = replace_once(code,
 "  formCardLines.push(htmlEsc(formPending.name) + '  [no price]');",
