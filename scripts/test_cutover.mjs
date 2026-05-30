@@ -18,6 +18,7 @@ const wf = JSON.parse(fs.readFileSync('n8n/concierge.supabase.workflow.json', 'u
 const nodes = Object.fromEntries(wf.nodes.map((n) => [n.name, n]));
 const ROUTER = nodes['Code'].parameters.jsCode;
 const CALLBACK = nodes['Callback Handler'].parameters.jsCode;
+const PARSE = nodes['Parse Response'].parameters.jsCode;
 const USER = 7865010991;
 
 function emptyState() {
@@ -57,10 +58,10 @@ function makeCtx() {
 
 const ENV = { SUPABASE_URL: 'https://fake.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'fake-key' };
 
-async function run(body, json) {
+async function run(body, json, dollar) {
   const fn = new Function('$json', '$env', '$', '__ctx',
     'return (async function(){\n' + body + '\n}).call(__ctx);');
-  return fn(json, ENV, () => ({ item: { json: {} } }), makeCtx());
+  return fn(json, ENV, dollar || (() => ({ item: { json: {} } })), makeCtx());
 }
 const msg = (text) => ({ message: { message_id: Math.floor(Math.random() * 1e6), text, chat: { id: USER }, from: { id: USER } } });
 const cbq = (data, message_id) => ({ callback_query: { id: 'cb' + Math.random(), data, message: { message_id, chat: { id: USER } }, from: { id: USER } } });
@@ -115,6 +116,22 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
   check('approve accrues pay +20', store.doc.wallet.pay === payBefore + 20, store.doc.wallet.pay);
   check('approve decremented inventory 50p', store.doc.inventory['50p'] === -2, store.doc.inventory['50p']);
   check('approve audited', store.events.some((e) => e.action === 'order_approved'));
+
+  // 7b. FREE-FORM end-to-end through Parse Response (the bridge split-brain fix):
+  //     router emits needs_parsing -> (fake Claude) -> Parse Response stages a
+  //     pending order in Supabase -> approve commits it.
+  const ff = await run(ROUTER, msg('jay 1 c 80 4520 papineau'));
+  const upstream = ff[0].json; // { chat_id, user_id, raw_text/parse_text, needs_parsing }
+  const fakeClaude = { content: [{ text: JSON.stringify({ name: 'jay', items: [{ product: 'c', qty: 1 }], price: 80, time: null, address: '4520 papineau' }) }] };
+  const dollar = (name) => name === 'Needs Parsing?' ? { item: { json: upstream } } : { item: { json: {} } };
+  const pr = await run(PARSE, fakeClaude, dollar);
+  const ffTok = pr[0].json.token;
+  check('freeform parsed -> pending in Supabase', !!ffTok && !!store.doc.pending[ffTok], Object.keys(store.doc.pending));
+  check('freeform pending audited', store.events.some((e) => e.action === 'order_pending'));
+  const ffCashBefore = store.doc.wallet.cash;
+  await run(CALLBACK, cbq('approve:' + ffTok, 9001));
+  check('freeform order approvable end-to-end', store.doc.orders.some((o) => o.id === ffTok), store.doc.orders.map(o=>o.id));
+  check('freeform approve adds cash', store.doc.wallet.cash === ffCashBefore + 80, store.doc.wallet.cash);
 
   // 8. idempotent re-tap: same approve must NOT double-charge
   const cashAfter = store.doc.wallet.cash, payAfter = store.doc.wallet.pay;

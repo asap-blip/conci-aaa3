@@ -64,19 +64,37 @@ await saveState(data);
 return __out;
 """
 
-def transform(js, is_router):
+def transform(js, kind):
     # 1. data source -> Supabase
     needle = "var data = $getWorkflowStaticData('global');"
     assert js.count(needle) == 1, "data source anchor"
     js = js.replace(needle, "data = await loadState();\n  data.__events = [];", 1)
 
-    # 2. neutralize inner httpRequest capture (this.* invalid inside __main)
+    # 2. neutralize inner httpRequest capture (this.* invalid inside __main).
+    #    Parse Response has no such line.
     hr = "var httpRequest = this.helpers.httpRequest.bind(this.helpers);"
-    assert js.count(hr) == 1, "httpRequest anchor"
-    js = js.replace(hr, "var httpRequest = __http; // bridged (prelude)", 1)
+    if kind in ('router', 'callback'):
+        assert js.count(hr) == 1, "httpRequest anchor"
+        js = js.replace(hr, "var httpRequest = __http; // bridged (prelude)", 1)
+    else:
+        assert js.count(hr) == 0, "unexpected httpRequest in parse node"
+
+    # 3. parse node: free-form / edit staging -> durable events
+    if kind == 'parse':
+        for action, etype in (('order_edit_staged', 'order'), ('order_edited', 'order'),
+                              ('order_pending', 'order')):
+            anchor = ("data.log.push({ ts: nowTs, by: userId, action: '" + action +
+                      "', details: { token: " + ('editToken' if action == 'order_edit_staged' else 'token') +
+                      ", raw: rawText } });")
+            assert js.count(anchor) == 1, "parse audit anchor " + action
+            ev = ("\nif (!data.__events) { data.__events = []; }\n"
+                  "data.__events.push({ actor: userId, entity_type: '" + etype + "', entity_id: " +
+                  ('editToken' if action == 'order_edit_staged' else 'token') +
+                  ", action: '" + action + "', metadata: { raw: rawText } });")
+            js = js.replace(anchor, anchor + ev, 1)
 
     # 3. audit -> durable events
-    if is_router:
+    if kind == 'router':
         old = ("function pushLog(action, details) {\n"
                "  data.log.push({ ts: nowTs, by: userId, action: action, details: details });\n"
                "  if (data.log.length > 500) { data.log = data.log.slice(data.log.length - 500); }\n"
@@ -91,7 +109,7 @@ def transform(js, is_router):
                "    action: action, metadata: details || {} });\n"
                "}")
         js = js.replace(old, new, 1)
-    else:
+    elif kind == 'callback':
         old = ("data.log.push({ ts: nowTs, by: userId, action: auditAction, "
                "details: { token: token, action: action } });")
         assert js.count(old) == 1, "callback audit anchor"
@@ -102,11 +120,12 @@ def transform(js, is_router):
 
     return PRELUDE + js + TRAILER
 
-nodes['Code']['parameters']['jsCode'] = transform(nodes['Code']['parameters']['jsCode'], True)
-nodes['Callback Handler']['parameters']['jsCode'] = transform(nodes['Callback Handler']['parameters']['jsCode'], False)
+nodes['Code']['parameters']['jsCode'] = transform(nodes['Code']['parameters']['jsCode'], 'router')
+nodes['Callback Handler']['parameters']['jsCode'] = transform(nodes['Callback Handler']['parameters']['jsCode'], 'callback')
+nodes['Parse Response']['parameters']['jsCode'] = transform(nodes['Parse Response']['parameters']['jsCode'], 'parse')
 
 d['name'] = 'concierge (supabase-backed)'
 json.dump(d, open(DST, 'w'), indent=2, ensure_ascii=False)
 print("wrote", DST)
-for nm in ('Code', 'Callback Handler'):
+for nm in ('Code', 'Callback Handler', 'Parse Response'):
     print(nm, "bytes:", len(nodes[nm]['parameters']['jsCode']))
