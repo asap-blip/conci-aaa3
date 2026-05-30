@@ -32,7 +32,25 @@ PRELUDE = """// ===== SUPABASE STATE BRIDGE (cutover) ==========================
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 const __SUPA_URL = $env.SUPABASE_URL;
 const __SUPA_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;
-const __http = this.helpers.httpRequest.bind(this.helpers);
+// Use global fetch (works in the n8n JS task runner AND legacy sandbox).
+// `this.helpers.httpRequest` is NOT available in the task runner.
+async function __http(opts) {
+  var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = (ctrl && opts.timeout) ? setTimeout(function () { ctrl.abort(); }, opts.timeout) : null;
+  try {
+    var res = await fetch(opts.url, {
+      method: opts.method || 'GET',
+      headers: opts.headers || {},
+      body: (opts.body === undefined || opts.body === null) ? undefined
+        : (typeof opts.body === 'string' ? opts.body : JSON.stringify(opts.body)),
+      signal: ctrl ? ctrl.signal : undefined
+    });
+    var txt = await res.text();
+    var parsed; try { parsed = txt ? JSON.parse(txt) : null; } catch (e) { parsed = txt; }
+    if (!res.ok) { var err = new Error('HTTP ' + res.status + ': ' + String(txt).slice(0, 300)); err.statusCode = res.status; err.body = parsed; throw err; }
+    return parsed;
+  } finally { if (timer) clearTimeout(timer); }
+}
 const __actor = ($json.message && $json.message.from && $json.message.from.id)
   || ($json.callback_query && $json.callback_query.from && $json.callback_query.from.id) || null;
 function __rpc(fn, args) {

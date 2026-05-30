@@ -35,34 +35,32 @@ function emptyState() {
 const store = { doc: emptyState(), events: [] };
 const clone = (x) => JSON.parse(JSON.stringify(x));
 
-function makeCtx() {
-  return {
-    helpers: {
-      httpRequest: async (opts) => {
-        const url = String(opts.url);
-        if (url.endsWith('/rpc/load_state')) return clone({ ...store.doc, __period_id: 1 });
-        if (url.endsWith('/rpc/save_state')) {
-          const s = clone(opts.body.p_state);
-          delete s.__events; delete s.__period_id; delete s.__actor;
-          store.doc = s;
-          for (const e of opts.body.p_events || []) store.events.push(e);
-          return { ok: true, period_id: 1 };
-        }
-        // dispatch ETA: exercise the graceful-failure branch deterministically
-        if (url.includes('concierge-eta')) return { ok: false, error: 'no location ping yet -- tap concierge ping on phone' };
-        throw new Error('unexpected url ' + url);
-      },
-    },
-  };
+// Mock of the global fetch the bridge now uses (task-runner compatible).
+function fakeFetch(url, opts) {
+  url = String(url);
+  const resp = (status, obj) => Promise.resolve({
+    ok: status >= 200 && status < 300, status, text: () => Promise.resolve(JSON.stringify(obj)),
+  });
+  if (url.endsWith('/rpc/load_state')) return resp(200, { ...clone(store.doc), __period_id: 1 });
+  if (url.endsWith('/rpc/save_state')) {
+    const body = JSON.parse(opts.body);
+    const s = clone(body.p_state); delete s.__events; delete s.__period_id; delete s.__actor;
+    store.doc = s;
+    for (const e of body.p_events || []) store.events.push(e);
+    return resp(200, { ok: true, period_id: 1 });
+  }
+  // dispatch ETA: exercise the graceful-failure branch deterministically
+  if (url.includes('concierge-eta')) return resp(200, { ok: false, error: 'no location ping yet -- tap concierge ping on phone' });
+  return resp(500, { error: 'unexpected url ' + url });
 }
 
 const ENV = { SUPABASE_URL: 'https://fake.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'fake-key',
   DISPATCH_ETA_URL: 'https://fake/webhook/concierge-eta-test', DISPATCH_SECRET: 'fake-secret' };
 
 async function run(body, json, dollar) {
-  const fn = new Function('$json', '$env', '$', '__ctx',
-    'return (async function(){\n' + body + '\n}).call(__ctx);');
-  return fn(json, ENV, dollar || (() => ({ item: { json: {} } })), makeCtx());
+  const fn = new Function('$json', '$env', '$', 'fetch',
+    'return (async function(){\n' + body + '\n})();');
+  return fn(json, ENV, dollar || (() => ({ item: { json: {} } })), fakeFetch);
 }
 const msg = (text) => ({ message: { message_id: Math.floor(Math.random() * 1e6), text, chat: { id: USER }, from: { id: USER } } });
 const cbq = (data, message_id) => ({ callback_query: { id: 'cb' + Math.random(), data, message: { message_id, chat: { id: USER } }, from: { id: USER } } });
