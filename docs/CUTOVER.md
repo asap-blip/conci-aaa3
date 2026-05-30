@@ -71,9 +71,11 @@ rows to `data.__events`, which `save_state` writes to the append-only log.
      node scripts/import_backup.mjs concierge-backup-*.json --actor <your_tg_id>
    ```
    Verify `concierge.export_period((select id from concierge.operating_periods where status='active'))`.
-4. **Configure n8n** (staging): set env `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`;
-   enable env access for Code nodes; expose the `concierge` schema in Supabase
-   (Settings → API), or add `public` wrapper functions for `load_state`/`save_state`.
+4. **Configure n8n** (staging): set env `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+   `TELEGRAM_BOT_TOKEN`, `DISPATCH_SECRET`, `DISPATCH_ETA_URL` (all secrets are now
+   referenced via `$env`, not embedded in the workflow JSON); enable env access for
+   Code nodes; expose the `concierge` schema in Supabase (Settings → API), or add
+   `public` wrapper functions for `load_state`/`save_state`.
 5. **Import `concierge.supabase.workflow.json`** into staging n8n, point the
    Telegram trigger at a **test bot**, and walk the flows: new order (both modes),
    approve / 🟧 front / cancel, wallet add/sub/paid, void, undo, summary, backup.

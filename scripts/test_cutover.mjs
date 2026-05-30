@@ -56,7 +56,8 @@ function makeCtx() {
   };
 }
 
-const ENV = { SUPABASE_URL: 'https://fake.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'fake-key' };
+const ENV = { SUPABASE_URL: 'https://fake.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'fake-key',
+  DISPATCH_ETA_URL: 'https://fake/webhook/concierge-eta-test', DISPATCH_SECRET: 'fake-secret' };
 
 async function run(body, json, dollar) {
   const fn = new Function('$json', '$env', '$', '__ctx',

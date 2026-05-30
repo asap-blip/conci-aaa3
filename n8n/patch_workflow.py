@@ -332,6 +332,30 @@ cn = nodes['Claude Parser']['parameters']
 assert '$json.raw_text.substring(2)' in cn['jsonBody'], "claude body anchor missing"
 cn['jsonBody'] = cn['jsonBody'].replace('$json.raw_text.substring(2)', '$json.parse_text || $json.raw_text')
 
+# --- externalize secrets out of the workflow JSON (staging/prod precondition) -
+# Telegram bot token in the 4 raw HTTP sender node URLs -> $env.TELEGRAM_BOT_TOKEN
+import re as _re
+_tok_re = _re.compile(r'bot\d+:[A-Za-z0-9_-]+')
+_tok_nodes = ['Send Card HTTP', 'Send ETA Card HTTP', 'Send Snippet HTTP', 'Send Backup Document']
+for _nm in _tok_nodes:
+    _u = nodes[_nm]['parameters'].get('url', '')
+    assert _tok_re.search(_u), 'expected inline bot token in ' + _nm
+    _u2 = _tok_re.sub('bot{{ $env.TELEGRAM_BOT_TOKEN }}', _u)
+    nodes[_nm]['parameters']['url'] = ('=' if not _u2.startswith('=') else '') + _u2
+
+# Dispatch URL + secret inline in Code and Callback Handler -> $env
+def _externalize_dispatch(js):
+    js2 = _re.sub(r"var DISPATCH_ETA_URL(\s*)= '[^']*';",
+                  r"var DISPATCH_ETA_URL\1= $env.DISPATCH_ETA_URL;", js)
+    js2 = _re.sub(r"var DISPATCH_SECRET(\s*)= '[^']*';",
+                  r"var DISPATCH_SECRET\1= $env.DISPATCH_SECRET;", js2)
+    return js2
+for _nm in ['Code', 'Callback Handler']:
+    _js = nodes[_nm]['parameters']['jsCode']
+    _new = _externalize_dispatch(_js)
+    assert _new != _js, 'dispatch externalization no-op in ' + _nm
+    nodes[_nm]['parameters']['jsCode'] = _new
+
 # bump workflow name so it's distinguishable on import
 d['name'] = 'concierge (hardened operator UX)'
 
