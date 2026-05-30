@@ -1,0 +1,241 @@
+{
+  "note": "spatial_ref_sys (PostGIS, 8500 rows of standard reference data) intentionally excluded",
+  "schema": "public_app_tables",
+  "tables": {
+    "scopes": [
+      {
+        "id": 1,
+        "kind": "main",
+        "label": "main",
+        "driver_id": null,
+        "is_active": true,
+        "created_at": "2026-05-28T01:00:01.41037+00:00"
+      },
+      {
+        "id": 2,
+        "kind": "driver",
+        "label": "d1",
+        "driver_id": 1,
+        "is_active": true,
+        "created_at": "2026-05-28T01:00:01.41037+00:00"
+      }
+    ],
+    "drivers": [
+      {
+        "id": 1,
+        "role": "owner",
+        "email": null,
+        "handle": "owner",
+        "is_active": true,
+        "created_at": "2026-05-28T01:00:01.41037+00:00",
+        "ping_secret": "REDACTED",
+        "display_name": "Owner",
+        "current_status": "idle",
+        "telegram_user_id": null
+      },
+      {
+        "id": 3,
+        "role": "driver",
+        "email": null,
+        "handle": "T",
+        "is_active": true,
+        "created_at": "2026-05-30T04:50:24.393344+00:00",
+        "ping_secret": null,
+        "display_name": "T",
+        "current_status": "off",
+        "telegram_user_id": null
+      },
+      {
+        "id": 4,
+        "role": "driver",
+        "email": null,
+        "handle": "SON",
+        "is_active": true,
+        "created_at": "2026-05-30T04:50:24.393344+00:00",
+        "ping_secret": null,
+        "display_name": "SON",
+        "current_status": "off",
+        "telegram_user_id": null
+      }
+    ],
+    "config_kv": [
+      {
+        "key": "eta_default_buffer_minutes",
+        "value": 5,
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      },
+      {
+        "key": "area_default_radius_m",
+        "value": 2000,
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      },
+      {
+        "key": "area_stale_threshold_sec",
+        "value": 900,
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      },
+      {
+        "key": "area_snapshot_enabled",
+        "value": true,
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      },
+      {
+        "key": "parser_enabled",
+        "value": true,
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      },
+      {
+        "key": "legacy_command_mode",
+        "value": {},
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      },
+      {
+        "key": "pending_state_in_db",
+        "value": {},
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      },
+      {
+        "key": "scope_default_driver_prefix",
+        "value": "d",
+        "updated_at": "2026-05-28T00:26:34.670059+00:00"
+      }
+    ],
+    "location_pings": [
+      {
+        "id": 1,
+        "ts": "2026-05-28T02:13:37+00:00",
+        "lat": 45.5017,
+        "lng": -73.5673,
+        "raw": null,
+        "source": "shortcut",
+        "driver_id": 1,
+        "accuracy_m": null
+      },
+      {
+        "id": 3,
+        "ts": "2026-05-28T04:31:05.893425+00:00",
+        "lat": 45.5017,
+        "lng": -73.5673,
+        "raw": {},
+        "source": "manual",
+        "driver_id": 1,
+        "accuracy_m": 15
+      },
+      {
+        "id": 4,
+        "ts": "2026-05-29T03:48:51.431135+00:00",
+        "lat": 45.5019,
+        "lng": -73.5674,
+        "raw": null,
+        "source": "manual",
+        "driver_id": 1,
+        "accuracy_m": null
+      },
+      {
+        "id": 5,
+        "ts": "2026-05-29T04:17:28.526958+00:00",
+        "lat": 45.5019,
+        "lng": -73.5674,
+        "raw": null,
+        "source": "manual",
+        "driver_id": 1,
+        "accuracy_m": null
+      }
+    ],
+    "client_area_snapshots": [
+      {
+        "id": 1,
+        "map_url": "https://www.google.com/maps/?q=45.50448241985306",
+        "order_id": null,
+        "radius_m": 2000,
+        "sent_via": null,
+        "client_id": null,
+        "driver_id": 1,
+        "center_lat": 45.5044824198531,
+        "center_lng": -73.5547744793429,
+        "created_at": "2026-05-28T04:44:15.983229+00:00",
+        "expires_at": "2026-05-28T05:14:15.898+00:00",
+        "precision_label": "2km",
+        "sent_to_client_at": null
+      },
+      {
+        "id": 2,
+        "map_url": "https://www.google.com/maps?q=45.505726,-73.569520&z=15",
+        "order_id": null,
+        "radius_m": 1000,
+        "sent_via": null,
+        "client_id": null,
+        "driver_id": 1,
+        "center_lat": 45.5057264585222,
+        "center_lng": -73.5695199170515,
+        "created_at": "2026-05-29T03:49:03.503429+00:00",
+        "expires_at": "2026-05-29T04:49:03.503429+00:00",
+        "precision_label": "1km",
+        "sent_to_client_at": null
+      },
+      {
+        "id": 3,
+        "map_url": "https://www.openstreetmap.org/#map=14/45.506/-73.565",
+        "order_id": null,
+        "radius_m": 1000,
+        "sent_via": null,
+        "client_id": null,
+        "driver_id": 1,
+        "center_lat": 45.5063566801074,
+        "center_lng": -73.5652523047033,
+        "created_at": "2026-05-29T04:17:37.015881+00:00",
+        "expires_at": "2026-05-29T05:17:37.015881+00:00",
+        "precision_label": "1km",
+        "sent_to_client_at": null
+      },
+      {
+        "id": 4,
+        "map_url": "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/path-3+3b82f6-0.9+3b82f6-0.20(grvtG~n%7C_M%7DIp%40qIpCuHjFoG~H_FbKeDzLeB~Ma%40rN%60%40rNdB%60NdDxL~EbKnG~HtHjFpIpC%7CIp%40%7CIq%40pIqCtHkFnG_I~EcKdDyLdBaN%60%40sNa%40sNeB_NeD%7BL_FcKoG_IuHkFqIqC%7DIq%40)/-73.564181,45.504520,14/600x400@2x?access_token=REDACTED",
+        "order_id": null,
+        "radius_m": 1000,
+        "sent_via": null,
+        "client_id": null,
+        "driver_id": 1,
+        "center_lat": 45.5045203305564,
+        "center_lng": -73.5641805674411,
+        "created_at": "2026-05-30T03:31:38.829764+00:00",
+        "expires_at": "2026-05-30T04:31:38.829764+00:00",
+        "precision_label": "1km",
+        "sent_to_client_at": null
+      },
+      {
+        "id": 7,
+        "map_url": "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/path-3+3b82f6-0.9+3b82f6-0.20(yavtGzm_%60MO%40QFOJKNKRGTEVAV%40XDVFTJRJNNHPFN%40PANGNILOJSFUBW%40YAWCWGUKSMOOKOGQA)/-73.567183,45.501887,19/600x400@2x?access_token=REDACTED",
+        "order_id": null,
+        "radius_m": 50,
+        "sent_via": null,
+        "client_id": null,
+        "driver_id": 1,
+        "center_lat": 45.501886886001,
+        "center_lng": -73.5671826320386,
+        "created_at": "2026-05-30T03:39:23.138575+00:00",
+        "expires_at": "2026-05-30T04:39:23.138575+00:00",
+        "precision_label": "50m",
+        "sent_to_client_at": null
+      },
+      {
+        "id": 8,
+        "map_url": "https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/path-3+3b82f6-0.9+3b82f6-0.20(yavtGvm_%60Mc%40Ba%40L%5DV%5B%5EUf%40Oj%40In%40Cp%40Bp%40Hn%40Nj%40Td%40Z%5E%5CV%60%40Lb%40D%60%40E%60%40M%5EWX_%40Te%40Pk%40Ho%40Bq%40Cq%40Io%40Qk%40Ug%40Y_%40_%40Wa%40Ma%40C)/-73.567797,45.501892,18/600x400@2x?access_token=REDACTED",
+        "order_id": null,
+        "radius_m": 100,
+        "sent_via": null,
+        "client_id": null,
+        "driver_id": 1,
+        "center_lat": 45.5018923528611,
+        "center_lng": -73.5677974690219,
+        "created_at": "2026-05-30T03:39:49.571748+00:00",
+        "expires_at": "2026-05-30T04:39:49.571748+00:00",
+        "precision_label": "100m",
+        "sent_to_client_at": null
+      }
+    ]
+  },
+  "project": "tludtcrrumfghzjbwcso (ccv10)",
+  "redactions": "public.drivers.ping_secret -> REDACTED; client_area_snapshots.map_url mapbox access_token -> REDACTED",
+  "captured_at": "2026-05-30T22:06:38.368178+00:00"
+}

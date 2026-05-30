@@ -1,0 +1,2298 @@
+{
+  "captured_at": "2026-05-30T22:06:59.041394+00:00",
+  "concierge_columns": [
+    {
+      "type": "bigint",
+      "table": "alerts",
+      "column": "id",
+      "default": "nextval('concierge.alerts_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "alerts",
+      "column": "type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "alerts",
+      "column": "trip_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "alerts",
+      "column": "driver_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "alerts",
+      "column": "message",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "alerts",
+      "column": "priority",
+      "default": "2",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "alerts",
+      "column": "resolved",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "alerts",
+      "column": "resolved_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "alerts",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "alerts",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "alerts",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "command_log",
+      "column": "id",
+      "default": "nextval('concierge.command_log_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "source",
+      "default": "'telegram'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "command_domain",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "command_raw",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "parsed_action",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "command_log",
+      "column": "payload",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "command_log",
+      "column": "result",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "command_log",
+      "column": "success",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "error_message",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "command_log",
+      "column": "executed_by",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "command_log",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "command_log",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "driver_assignments",
+      "column": "id",
+      "default": "nextval('concierge.driver_assignments_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "driver_assignments",
+      "column": "trip_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "driver_assignments",
+      "column": "driver_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "driver_assignments",
+      "column": "assigned_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "driver_assignments",
+      "column": "unassigned_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "driver_assignments",
+      "column": "is_active",
+      "default": "true",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "driver_assignments",
+      "column": "notes",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "driver_assignments",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "driver_assignments",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "drivers",
+      "column": "id",
+      "default": "nextval('concierge.drivers_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "name",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "handle",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "status",
+      "default": "'active'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "phone",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "notes",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "drivers",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "drivers",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "eta_snapshots",
+      "column": "id",
+      "default": "nextval('concierge.eta_snapshots_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "eta_snapshots",
+      "column": "trip_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "eta_snapshots",
+      "column": "driver_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "double precision",
+      "table": "eta_snapshots",
+      "column": "origin_lat",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "double precision",
+      "table": "eta_snapshots",
+      "column": "origin_lng",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "eta_snapshots",
+      "column": "destination_address",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "eta_snapshots",
+      "column": "distance_m",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "eta_snapshots",
+      "column": "duration_seconds",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "eta_snapshots",
+      "column": "eta_label",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "eta_snapshots",
+      "column": "client_eta_label",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "eta_snapshots",
+      "column": "traffic_model",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "eta_snapshots",
+      "column": "ping_age_seconds",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "eta_snapshots",
+      "column": "raw_response",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "eta_snapshots",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "eta_snapshots",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "finance_transactions",
+      "column": "id",
+      "default": "nextval('concierge.finance_transactions_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "finance_transactions",
+      "column": "type",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "numeric",
+      "table": "finance_transactions",
+      "column": "amount",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "finance_transactions",
+      "column": "client_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "finance_transactions",
+      "column": "trip_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "finance_transactions",
+      "column": "note",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "finance_transactions",
+      "column": "created_by",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "finance_transactions",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "finance_transactions",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "finance_wallet",
+      "column": "id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "numeric",
+      "table": "finance_wallet",
+      "column": "balance",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "finance_wallet",
+      "column": "last_updated_by",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "finance_wallet",
+      "column": "notes",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "finance_wallet",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "finance_wallet",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "numeric",
+      "table": "finance_wallet",
+      "column": "pay",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "id",
+      "default": "nextval('concierge.fronts_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "trip_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "fronts",
+      "column": "client_name",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "numeric",
+      "table": "fronts",
+      "column": "amount",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "fronts",
+      "column": "paid",
+      "default": "false",
+      "nullable": "NO"
+    },
+    {
+      "type": "numeric",
+      "table": "fronts",
+      "column": "paid_amount",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "fronts",
+      "column": "paid_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "fronts",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "fronts",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory",
+      "column": "id",
+      "default": "nextval('concierge.inventory_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "inventory",
+      "column": "item_key",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "inventory",
+      "column": "label",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "inventory",
+      "column": "quantity",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "inventory",
+      "column": "last_reset_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "inventory",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "inventory",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "staged_prompts",
+      "column": "chat_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "staged_prompts",
+      "column": "step",
+      "default": "0",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "staged_prompts",
+      "column": "domain",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "staged_prompts",
+      "column": "collected",
+      "default": "'{}'::jsonb",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "staged_prompts",
+      "column": "expires_at",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "staged_prompts",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "staged_prompts",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "trip_legs",
+      "column": "id",
+      "default": "nextval('concierge.trip_legs_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "trip_legs",
+      "column": "trip_id",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "trip_legs",
+      "column": "leg_order",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "trip_legs",
+      "column": "from_address",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "trip_legs",
+      "column": "to_address",
+      "default": null,
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "trip_legs",
+      "column": "status",
+      "default": "'pending'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "trip_legs",
+      "column": "notes",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "trip_legs",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "trip_legs",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "trips",
+      "column": "id",
+      "default": "nextval('concierge.trips_id_seq'::regclass)",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "ref",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "status",
+      "default": "'pending'::text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "client_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "client_phone",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "pickup_address",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "dropoff_address",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "notes",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "trips",
+      "column": "voided_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "trips",
+      "column": "completed_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "trips",
+      "column": "created_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "trips",
+      "column": "updated_at",
+      "default": "now()",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "trips",
+      "column": "requested_time",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "numeric",
+      "table": "trips",
+      "column": "price",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_active_trips",
+      "column": "id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "ref",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "status",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "client_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "client_phone",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "pickup_address",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "dropoff_address",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "notes",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_active_trips",
+      "column": "created_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_active_trips",
+      "column": "updated_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_active_trips",
+      "column": "assignment_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_active_trips",
+      "column": "driver_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_active_trips",
+      "column": "assigned_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "driver_handle",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_active_trips",
+      "column": "driver_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "numeric",
+      "table": "v_active_trips",
+      "column": "price",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_drafts",
+      "column": "id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "ref",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "status",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "client_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "client_phone",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "pickup_address",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "dropoff_address",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "notes",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "requested_time",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_drafts",
+      "column": "created_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_drafts",
+      "column": "updated_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_drafts",
+      "column": "assignment_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_drafts",
+      "column": "driver_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_drafts",
+      "column": "assigned_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "driver_handle",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_drafts",
+      "column": "driver_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "numeric",
+      "table": "v_drafts",
+      "column": "price",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_driver_roster",
+      "column": "id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_driver_roster",
+      "column": "handle",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_driver_roster",
+      "column": "name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_driver_roster",
+      "column": "status",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_driver_roster",
+      "column": "last_ping_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "v_driver_roster",
+      "column": "last_ping_age_seconds",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_driver_roster",
+      "column": "active_trip_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_driver_roster",
+      "column": "active_assigned_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_finance_fronts_open",
+      "column": "id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "v_finance_fronts_open",
+      "column": "trip_id",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "v_finance_fronts_open",
+      "column": "client_name",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "numeric",
+      "table": "v_finance_fronts_open",
+      "column": "amount",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "numeric",
+      "table": "v_finance_fronts_open",
+      "column": "paid_amount",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "numeric",
+      "table": "v_finance_fronts_open",
+      "column": "outstanding",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_finance_fronts_open",
+      "column": "created_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "v_finance_fronts_open",
+      "column": "updated_at",
+      "default": null,
+      "nullable": "YES"
+    },
+    {
+      "type": "numeric",
+      "table": "v_finance_fronts_open",
+      "column": "price",
+      "default": null,
+      "nullable": "YES"
+    }
+  ],
+  "public_app_columns": [
+    {
+      "type": "bigint",
+      "table": "alerts",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "alerts",
+      "column": "kind",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "alerts",
+      "column": "severity",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "alerts",
+      "column": "payload",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "alerts",
+      "column": "target_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "alerts",
+      "column": "target_scope_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "alerts",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "alerts",
+      "column": "acknowledged_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "alerts",
+      "column": "acknowledged_by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "client_area_snapshots",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "client_area_snapshots",
+      "column": "order_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "client_area_snapshots",
+      "column": "client_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "client_area_snapshots",
+      "column": "driver_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "double precision",
+      "table": "client_area_snapshots",
+      "column": "center_lat",
+      "nullable": "NO"
+    },
+    {
+      "type": "double precision",
+      "table": "client_area_snapshots",
+      "column": "center_lng",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "client_area_snapshots",
+      "column": "radius_m",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "client_area_snapshots",
+      "column": "precision_label",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "client_area_snapshots",
+      "column": "expires_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "client_area_snapshots",
+      "column": "sent_to_client_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "client_area_snapshots",
+      "column": "sent_via",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "client_area_snapshots",
+      "column": "map_url",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "client_area_snapshots",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "clients",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "clients",
+      "column": "handle",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "clients",
+      "column": "display_name",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "clients",
+      "column": "phone",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "clients",
+      "column": "telegram_username",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "clients",
+      "column": "notes",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "clients",
+      "column": "default_address",
+      "nullable": "YES"
+    },
+    {
+      "type": "integer",
+      "table": "clients",
+      "column": "default_area_radius_m",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "clients",
+      "column": "default_eta_buffer_minutes",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "clients",
+      "column": "legacy_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "clients",
+      "column": "archived_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "clients",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "command_log",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "command_log",
+      "column": "ts",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "source",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "command_log",
+      "column": "telegram_user_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "command_log",
+      "column": "driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "command_log",
+      "column": "scope_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "raw_text",
+      "nullable": "YES"
+    },
+    {
+      "type": "jsonb",
+      "table": "command_log",
+      "column": "parsed_command",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "status",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "error_message",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "command_log",
+      "column": "execution_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "command_log",
+      "column": "telegram_message_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "config_kv",
+      "column": "key",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "config_kv",
+      "column": "value",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "config_kv",
+      "column": "updated_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "drivers",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "handle",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "display_name",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "drivers",
+      "column": "telegram_user_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "email",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "ping_secret",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "role",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "drivers",
+      "column": "is_active",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "drivers",
+      "column": "current_status",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "drivers",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "eta_snapshots",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "eta_snapshots",
+      "column": "order_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "eta_snapshots",
+      "column": "driver_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "double precision",
+      "table": "eta_snapshots",
+      "column": "origin_lat",
+      "nullable": "NO"
+    },
+    {
+      "type": "double precision",
+      "table": "eta_snapshots",
+      "column": "origin_lng",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "eta_snapshots",
+      "column": "dest_text",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "eta_snapshots",
+      "column": "dest_resolved",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "eta_snapshots",
+      "column": "eta_seconds",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "eta_snapshots",
+      "column": "distance_m",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "eta_snapshots",
+      "column": "buffer_minutes",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "eta_snapshots",
+      "column": "internal_eta_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "eta_snapshots",
+      "column": "client_eta_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "eta_snapshots",
+      "column": "location_age_seconds",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "eta_snapshots",
+      "column": "location_stale",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "eta_snapshots",
+      "column": "raw_response",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "eta_snapshots",
+      "column": "sent_to_client_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "eta_snapshots",
+      "column": "sent_via",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "eta_snapshots",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "front_payments",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "front_payments",
+      "column": "front_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "front_payments",
+      "column": "scope_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "front_payments",
+      "column": "amount_cents",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "front_payments",
+      "column": "method",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "front_payments",
+      "column": "ts",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "front_payments",
+      "column": "by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "front_payments",
+      "column": "notes",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "client_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "scope_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "order_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "amount_cents",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "fronts",
+      "column": "opened_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "opened_by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "fronts",
+      "column": "settled",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "fronts",
+      "column": "settled_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "boolean",
+      "table": "fronts",
+      "column": "forgiven",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "fronts",
+      "column": "forgiven_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "fronts",
+      "column": "forgiven_by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "fronts",
+      "column": "notes",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "fronts",
+      "column": "legacy_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "idempotency_keys",
+      "column": "key",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "idempotency_keys",
+      "column": "scope",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "idempotency_keys",
+      "column": "request_hash",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "idempotency_keys",
+      "column": "result_jsonb",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "idempotency_keys",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "idempotency_keys",
+      "column": "expires_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory_items",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "inventory_items",
+      "column": "code",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "inventory_items",
+      "column": "name",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "inventory_items",
+      "column": "unit",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory_items",
+      "column": "unit_cost_cents",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "inventory_items",
+      "column": "archived_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "inventory_items",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory_movements",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory_movements",
+      "column": "item_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory_movements",
+      "column": "scope_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "numeric",
+      "table": "inventory_movements",
+      "column": "quantity_delta",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "inventory_movements",
+      "column": "reason",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory_movements",
+      "column": "order_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "inventory_movements",
+      "column": "notes",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "inventory_movements",
+      "column": "ts",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "inventory_movements",
+      "column": "by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "location_pings",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "location_pings",
+      "column": "driver_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "double precision",
+      "table": "location_pings",
+      "column": "lat",
+      "nullable": "NO"
+    },
+    {
+      "type": "double precision",
+      "table": "location_pings",
+      "column": "lng",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "location_pings",
+      "column": "accuracy_m",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "location_pings",
+      "column": "source",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "location_pings",
+      "column": "ts",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "location_pings",
+      "column": "raw",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "order_items",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "order_items",
+      "column": "order_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "order_items",
+      "column": "item_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "numeric",
+      "table": "order_items",
+      "column": "quantity",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "orders",
+      "column": "external_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "client_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "scope_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "price_cents",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "front_amount_cents",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "orders",
+      "column": "status",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "orders",
+      "column": "time_label",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "orders",
+      "column": "address",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "orders",
+      "column": "notes",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "entered_by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "approved_by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "orders",
+      "column": "voided_by_driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "orders",
+      "column": "void_reason",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "orders",
+      "column": "entered_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "orders",
+      "column": "approved_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "orders",
+      "column": "voided_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "orders",
+      "column": "legacy_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "orders",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "pending_confirmations",
+      "column": "token",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "pending_confirmations",
+      "column": "purpose",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "pending_confirmations",
+      "column": "payload",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "pending_confirmations",
+      "column": "created_by_telegram_user_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "pending_confirmations",
+      "column": "telegram_chat_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "pending_confirmations",
+      "column": "telegram_message_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "pending_confirmations",
+      "column": "scope_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "pending_confirmations",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "pending_confirmations",
+      "column": "expires_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "pending_confirmations",
+      "column": "consumed_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "pending_ui_state",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "pending_ui_state",
+      "column": "driver_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "pending_ui_state",
+      "column": "telegram_chat_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "pending_ui_state",
+      "column": "flow",
+      "nullable": "NO"
+    },
+    {
+      "type": "integer",
+      "table": "pending_ui_state",
+      "column": "step",
+      "nullable": "NO"
+    },
+    {
+      "type": "jsonb",
+      "table": "pending_ui_state",
+      "column": "state",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "pending_ui_state",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "pending_ui_state",
+      "column": "updated_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "pending_ui_state",
+      "column": "expires_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "scopes",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "scopes",
+      "column": "kind",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "scopes",
+      "column": "driver_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "scopes",
+      "column": "label",
+      "nullable": "NO"
+    },
+    {
+      "type": "boolean",
+      "table": "scopes",
+      "column": "is_active",
+      "nullable": "NO"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "scopes",
+      "column": "created_at",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "wallet_ledger",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "wallet_ledger",
+      "column": "scope_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "text",
+      "table": "wallet_ledger",
+      "column": "kind",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "wallet_ledger",
+      "column": "cash_delta_cents",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "wallet_ledger",
+      "column": "pay_delta_cents",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "wallet_ledger",
+      "column": "order_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "bigint",
+      "table": "wallet_ledger",
+      "column": "front_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "text",
+      "table": "wallet_ledger",
+      "column": "notes",
+      "nullable": "YES"
+    },
+    {
+      "type": "timestamp with time zone",
+      "table": "wallet_ledger",
+      "column": "ts",
+      "nullable": "NO"
+    },
+    {
+      "type": "bigint",
+      "table": "wallet_ledger",
+      "column": "entered_by_driver_id",
+      "nullable": "YES"
+    }
+  ]
+}

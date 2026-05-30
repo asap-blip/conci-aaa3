@@ -1,0 +1,1820 @@
+{
+  "schema": "concierge",
+  "tables": {
+    "trips": [
+      {
+        "id": 1,
+        "ref": null,
+        "notes": "1p",
+        "price": null,
+        "status": "voided",
+        "voided_at": "2026-05-29T18:20:05.402755+00:00",
+        "created_at": "2026-05-29T18:19:18.907995+00:00",
+        "updated_at": "2026-05-29T18:20:05.402755+00:00",
+        "client_name": "maya",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "4520 papineau"
+      },
+      {
+        "id": 4,
+        "ref": null,
+        "notes": "4520 papineau",
+        "price": null,
+        "status": "voided",
+        "voided_at": "2026-05-30T04:04:36.567522+00:00",
+        "created_at": "2026-05-30T03:47:31.468675+00:00",
+        "updated_at": "2026-05-30T04:04:36.567522+00:00",
+        "client_name": "maya",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "1p"
+      },
+      {
+        "id": 3,
+        "ref": null,
+        "notes": "4b oz, 1 small",
+        "price": null,
+        "status": "voided",
+        "voided_at": "2026-05-30T04:04:42.350753+00:00",
+        "created_at": "2026-05-29T19:05:32.140602+00:00",
+        "updated_at": "2026-05-30T04:04:42.350753+00:00",
+        "client_name": "Test Client",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "123 Main St"
+      },
+      {
+        "id": 2,
+        "ref": null,
+        "notes": "4b oz, 1 small",
+        "price": null,
+        "status": "voided",
+        "voided_at": "2026-05-30T04:04:47.959584+00:00",
+        "created_at": "2026-05-29T18:50:37.185036+00:00",
+        "updated_at": "2026-05-30T04:04:47.959584+00:00",
+        "client_name": "Test Client",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "123 Main St"
+      },
+      {
+        "id": 5,
+        "ref": null,
+        "notes": "1 small",
+        "price": null,
+        "status": "pending",
+        "voided_at": null,
+        "created_at": "2026-05-30T04:35:45.689657+00:00",
+        "updated_at": "2026-05-30T04:35:49.294532+00:00",
+        "client_name": "Maya",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "123 Main St"
+      },
+      {
+        "id": 6,
+        "ref": null,
+        "notes": "1p",
+        "price": null,
+        "status": "pending",
+        "voided_at": null,
+        "created_at": "2026-05-30T04:59:43.136075+00:00",
+        "updated_at": "2026-05-30T04:59:49.159465+00:00",
+        "client_name": "maya",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "4520 papineau"
+      },
+      {
+        "id": 7,
+        "ref": null,
+        "notes": "11p",
+        "price": null,
+        "status": "pending",
+        "voided_at": null,
+        "created_at": "2026-05-30T05:03:06.203589+00:00",
+        "updated_at": "2026-05-30T05:03:09.251418+00:00",
+        "client_name": "Maya",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "6666 sherbrooke"
+      },
+      {
+        "id": 8,
+        "ref": null,
+        "notes": "11p",
+        "price": null,
+        "status": "active",
+        "voided_at": null,
+        "created_at": "2026-05-30T05:03:52.694923+00:00",
+        "updated_at": "2026-05-30T05:03:59.386626+00:00",
+        "client_name": "Maya",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "6666 sherbrooke"
+      },
+      {
+        "id": 9,
+        "ref": null,
+        "notes": "3p",
+        "price": 300.0,
+        "status": "active",
+        "voided_at": null,
+        "created_at": "2026-05-30T05:32:10.083523+00:00",
+        "updated_at": "2026-05-30T05:32:16.686127+00:00",
+        "client_name": "jay",
+        "client_phone": null,
+        "completed_at": null,
+        "pickup_address": null,
+        "requested_time": "asap",
+        "dropoff_address": "4555 papineau"
+      }
+    ],
+    "alerts": [],
+    "fronts": [],
+    "drivers": [
+      {
+        "id": 1,
+        "name": "T",
+        "notes": null,
+        "phone": null,
+        "handle": "T",
+        "status": "active",
+        "created_at": "2026-05-30T04:50:24.393344+00:00",
+        "updated_at": "2026-05-30T04:50:24.393344+00:00"
+      },
+      {
+        "id": 2,
+        "name": "SON",
+        "notes": null,
+        "phone": null,
+        "handle": "SON",
+        "status": "active",
+        "created_at": "2026-05-30T04:50:24.393344+00:00",
+        "updated_at": "2026-05-30T04:50:24.393344+00:00"
+      }
+    ],
+    "inventory": [
+      {
+        "id": 2,
+        "label": "Product",
+        "item_key": "p",
+        "quantity": 0,
+        "created_at": "2026-05-28T13:58:15.432288+00:00",
+        "updated_at": "2026-05-29T02:09:09.839495+00:00",
+        "last_reset_at": null
+      },
+      {
+        "id": 3,
+        "label": "50c",
+        "item_key": "50c",
+        "quantity": 0,
+        "created_at": "2026-05-29T03:31:59.718574+00:00",
+        "updated_at": "2026-05-29T03:31:59.718574+00:00",
+        "last_reset_at": null
+      },
+      {
+        "id": 5,
+        "label": "50k",
+        "item_key": "50k",
+        "quantity": 0,
+        "created_at": "2026-05-29T03:31:59.718574+00:00",
+        "updated_at": "2026-05-29T03:31:59.718574+00:00",
+        "last_reset_at": null
+      },
+      {
+        "id": 6,
+        "label": "m",
+        "item_key": "m",
+        "quantity": 0,
+        "created_at": "2026-05-29T03:31:59.718574+00:00",
+        "updated_at": "2026-05-29T03:31:59.718574+00:00",
+        "last_reset_at": null
+      },
+      {
+        "id": 7,
+        "label": "s",
+        "item_key": "s",
+        "quantity": 0,
+        "created_at": "2026-05-29T03:31:59.718574+00:00",
+        "updated_at": "2026-05-29T03:31:59.718574+00:00",
+        "last_reset_at": null
+      },
+      {
+        "id": 9,
+        "label": "50p",
+        "item_key": "50p",
+        "quantity": 0,
+        "created_at": "2026-05-29T18:09:50.919158+00:00",
+        "updated_at": "2026-05-29T18:09:50.919158+00:00",
+        "last_reset_at": null
+      },
+      {
+        "id": 1,
+        "label": "Cash",
+        "item_key": "c",
+        "quantity": 0,
+        "created_at": "2026-05-28T13:58:15.432288+00:00",
+        "updated_at": "2026-05-29T18:19:03.307852+00:00",
+        "last_reset_at": "2026-05-29T18:19:03.307852+00:00"
+      },
+      {
+        "id": 4,
+        "label": "k",
+        "item_key": "k",
+        "quantity": 0,
+        "created_at": "2026-05-29T03:31:59.718574+00:00",
+        "updated_at": "2026-05-29T18:19:05.308403+00:00",
+        "last_reset_at": "2026-05-29T18:19:05.308403+00:00"
+      },
+      {
+        "id": 8,
+        "label": "b",
+        "item_key": "b",
+        "quantity": 4,
+        "created_at": "2026-05-29T03:31:59.718574+00:00",
+        "updated_at": "2026-05-30T04:02:57.243269+00:00",
+        "last_reset_at": null
+      }
+    ],
+    "trip_legs": [],
+    "command_log": [
+      {
+        "id": 1,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:21:52.898848+00:00",
+        "updated_at": "2026-05-29T03:21:52.898848+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 2,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:22:01.322689+00:00",
+        "updated_at": "2026-05-29T03:22:01.322689+00:00",
+        "command_raw": "fin",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "fin"
+      },
+      {
+        "id": 3,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:22:07.300432+00:00",
+        "updated_at": "2026-05-29T03:22:07.300432+00:00",
+        "command_raw": "trip",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "list",
+        "command_domain": "trip"
+      },
+      {
+        "id": 4,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:22:11.356025+00:00",
+        "updated_at": "2026-05-29T03:22:11.356025+00:00",
+        "command_raw": "ops alerts",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "alerts",
+        "command_domain": "ops"
+      },
+      {
+        "id": 5,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:32:57.148031+00:00",
+        "updated_at": "2026-05-29T03:32:57.148031+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 6,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:36:45.500417+00:00",
+        "updated_at": "2026-05-29T03:36:45.500417+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 7,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:37:04.053294+00:00",
+        "updated_at": "2026-05-29T03:37:04.053294+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 8,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:38:30.10292+00:00",
+        "updated_at": "2026-05-29T03:38:30.10292+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 9,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:47:37.045733+00:00",
+        "updated_at": "2026-05-29T03:47:37.045733+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 10,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "lat": 45.5019,
+          "lng": -73.5674,
+          "driver": "1"
+        },
+        "success": false,
+        "created_at": "2026-05-29T03:48:38.784729+00:00",
+        "updated_at": "2026-05-29T03:48:38.784729+00:00",
+        "command_raw": "ops loc 1 45.5019 -73.5674",
+        "executed_by": 7865010991,
+        "error_message": "driver @1: not found",
+        "parsed_action": "loc",
+        "command_domain": "ops"
+      },
+      {
+        "id": 11,
+        "result": {
+          "pingId": "4",
+          "source": "manual",
+          "driverId": "1"
+        },
+        "source": "telegram",
+        "payload": {
+          "lat": 45.5019,
+          "lng": -73.5674,
+          "driver": "owner"
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:48:51.431135+00:00",
+        "updated_at": "2026-05-29T03:48:51.431135+00:00",
+        "command_raw": "ops loc owner 45.5019 -73.5674",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "loc",
+        "command_domain": "ops"
+      },
+      {
+        "id": 12,
+        "result": {
+          "driverId": "1",
+          "snapshotId": "2",
+          "pingAgeSeconds": 12,
+          "precisionLabel": "1km",
+          "effectiveRadius": 1000
+        },
+        "source": "telegram",
+        "payload": {
+          "driver": "owner",
+          "radius_m": 1000
+        },
+        "success": true,
+        "created_at": "2026-05-29T03:49:03.503429+00:00",
+        "updated_at": "2026-05-29T03:49:03.503429+00:00",
+        "command_raw": "ops area owner 1000",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "area",
+        "command_domain": "ops"
+      },
+      {
+        "id": 13,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T04:17:14.932928+00:00",
+        "updated_at": "2026-05-29T04:17:14.932928+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 14,
+        "result": {
+          "pingId": "5",
+          "source": "manual",
+          "driverId": "1"
+        },
+        "source": "telegram",
+        "payload": {
+          "lat": 45.5019,
+          "lng": -73.5674,
+          "driver": "owner"
+        },
+        "success": true,
+        "created_at": "2026-05-29T04:17:28.526958+00:00",
+        "updated_at": "2026-05-29T04:17:28.526958+00:00",
+        "command_raw": "ops loc owner 45.5019 -73.5674",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "loc",
+        "command_domain": "ops"
+      },
+      {
+        "id": 15,
+        "result": {
+          "driverId": "1",
+          "renderMode": "osm_text",
+          "snapshotId": "3",
+          "pingAgeSeconds": 8,
+          "precisionLabel": "1km",
+          "effectiveRadius": 1000
+        },
+        "source": "telegram",
+        "payload": {
+          "driver": "owner",
+          "radius_m": 1000
+        },
+        "success": true,
+        "created_at": "2026-05-29T04:17:37.015881+00:00",
+        "updated_at": "2026-05-29T04:17:37.015881+00:00",
+        "command_raw": "ops area owner 1000",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "area",
+        "command_domain": "ops"
+      },
+      {
+        "id": 16,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T17:45:14.008692+00:00",
+        "updated_at": "2026-05-29T17:45:14.008692+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 17,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T17:45:18.193502+00:00",
+        "updated_at": "2026-05-29T17:45:18.193502+00:00",
+        "command_raw": "trip",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "list",
+        "command_domain": "trip"
+      },
+      {
+        "id": 18,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:02:52.229249+00:00",
+        "updated_at": "2026-05-29T18:02:52.229249+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 19,
+        "result": {
+          "item_key": "c",
+          "quantity": 1
+        },
+        "source": "telegram",
+        "payload": {
+          "key": "c",
+          "qty": 1
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:03:07.761478+00:00",
+        "updated_at": "2026-05-29T18:03:07.761478+00:00",
+        "command_raw": "inv add c=1",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "add",
+        "command_domain": "inv"
+      },
+      {
+        "id": 20,
+        "result": {
+          "item_key": "k",
+          "quantity": 1
+        },
+        "source": "telegram",
+        "payload": {
+          "key": "k",
+          "qty": 1
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:03:19.090054+00:00",
+        "updated_at": "2026-05-29T18:03:19.090054+00:00",
+        "command_raw": "inv add k=1",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "add",
+        "command_domain": "inv"
+      },
+      {
+        "id": 21,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:18:53.982561+00:00",
+        "updated_at": "2026-05-29T18:18:53.982561+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 22,
+        "result": {
+          "item_key": "c",
+          "quantity": 2
+        },
+        "source": "telegram",
+        "payload": {
+          "key": "c",
+          "qty": 1
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:18:54.100283+00:00",
+        "updated_at": "2026-05-29T18:18:54.100283+00:00",
+        "command_raw": "inv add c=1",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "add",
+        "command_domain": "inv"
+      },
+      {
+        "id": 23,
+        "result": {
+          "item_key": "c",
+          "last_reset_at": "2026-05-29T18:19:03.307Z"
+        },
+        "source": "telegram",
+        "payload": {
+          "key": "c"
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:19:03.367219+00:00",
+        "updated_at": "2026-05-29T18:19:03.367219+00:00",
+        "command_raw": "inv reset c",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "reset",
+        "command_domain": "inv"
+      },
+      {
+        "id": 24,
+        "result": {
+          "item_key": "k",
+          "last_reset_at": "2026-05-29T18:19:05.308Z"
+        },
+        "source": "telegram",
+        "payload": {
+          "key": "k"
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:19:05.367884+00:00",
+        "updated_at": "2026-05-29T18:19:05.367884+00:00",
+        "command_raw": "inv reset k",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "reset",
+        "command_domain": "inv"
+      },
+      {
+        "id": 25,
+        "result": {
+          "status": "draft",
+          "tripId": "1"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "4520 papineau",
+          "orderText": "1p",
+          "clientName": "maya",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:19:18.970705+00:00",
+        "updated_at": "2026-05-29T18:19:18.970705+00:00",
+        "command_raw": "new maya\n1p\n4520 papineau",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 26,
+        "result": {
+          "status": "pending",
+          "tripId": 1,
+          "priorStatus": "draft"
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 1
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:19:44.241228+00:00",
+        "updated_at": "2026-05-29T18:19:44.241228+00:00",
+        "command_raw": "cb:trip:confirm:1",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 27,
+        "result": {
+          "status": "voided",
+          "tripId": 1,
+          "priorStatus": "pending",
+          "assignmentsClosed": 0
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 1
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:20:05.402755+00:00",
+        "updated_at": "2026-05-29T18:20:05.402755+00:00",
+        "command_raw": "cb:trip:void:1",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "void",
+        "command_domain": "trip"
+      },
+      {
+        "id": 28,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:20:15.683139+00:00",
+        "updated_at": "2026-05-29T18:20:15.683139+00:00",
+        "command_raw": "trip",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "list",
+        "command_domain": "trip"
+      },
+      {
+        "id": 29,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:48:14.605095+00:00",
+        "updated_at": "2026-05-29T18:48:14.605095+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 30,
+        "result": {
+          "status": "draft",
+          "tripId": "2"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "123 Main St",
+          "orderText": "4b oz, 1 small",
+          "clientName": "Test Client",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:50:37.248809+00:00",
+        "updated_at": "2026-05-29T18:50:37.248809+00:00",
+        "command_raw": "new\nTest Client\n4b oz, 1 small\n123 Main St\nasap",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 31,
+        "result": {
+          "status": "pending",
+          "tripId": 2,
+          "priorStatus": "draft"
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 2
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:50:41.353201+00:00",
+        "updated_at": "2026-05-29T18:50:41.353201+00:00",
+        "command_raw": "cb:trip:confirm:2",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 32,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T18:50:46.636117+00:00",
+        "updated_at": "2026-05-29T18:50:46.636117+00:00",
+        "command_raw": "trip drafts",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "drafts",
+        "command_domain": "trip"
+      },
+      {
+        "id": 33,
+        "result": {
+          "status": "draft",
+          "tripId": "3"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "123 Main St",
+          "orderText": "4b oz, 1 small",
+          "clientName": "Test Client",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-29T19:05:32.209484+00:00",
+        "updated_at": "2026-05-29T19:05:32.209484+00:00",
+        "command_raw": "new\nTest Client\n4b oz, 1 small\n123 Main St\nasap",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 34,
+        "result": {
+          "status": "pending",
+          "tripId": 3,
+          "priorStatus": "draft"
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 3
+        },
+        "success": true,
+        "created_at": "2026-05-29T19:05:37.272221+00:00",
+        "updated_at": "2026-05-29T19:05:37.272221+00:00",
+        "command_raw": "cb:trip:confirm:3",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 35,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-29T19:15:10.00603+00:00",
+        "updated_at": "2026-05-29T19:15:10.00603+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 36,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "address": "1191 bd decarie",
+          "driverHandle": null
+        },
+        "success": false,
+        "created_at": "2026-05-30T01:08:47.405423+00:00",
+        "updated_at": "2026-05-30T01:08:47.405423+00:00",
+        "command_raw": "eta addr 1191 bd decarie",
+        "executed_by": 7865010991,
+        "error_message": "Routes API failed: Routes API HTTP 403: [{\n  \"error\": {\n    \"code\": 403,\n    \"message\": \"The provided API key has an IP address restriction. The originating IP address of the call (2a01:4ff:1f0:44f8::1) violates this restriction.\",\n    \"status\": \"PERMISSION_DENIED\",\n    \"details\"",
+        "parsed_action": "addr",
+        "command_domain": "eta"
+      },
+      {
+        "id": 37,
+        "result": {
+          "driverId": "1",
+          "etaLabel": "22min, arriving 9:33p.m.",
+          "distanceM": 13448,
+          "driverHandle": "owner",
+          "clientEtaLabel": "~27min, arriving 9:38p.m.",
+          "pingAgeSeconds": 75249,
+          "durationSeconds": 1334
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "1191 bd decarie",
+          "driverHandle": null
+        },
+        "success": true,
+        "created_at": "2026-05-30T01:11:38.227101+00:00",
+        "updated_at": "2026-05-30T01:11:38.227101+00:00",
+        "command_raw": "eta addr 1191 bd decarie",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "addr",
+        "command_domain": "eta"
+      },
+      {
+        "id": 38,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T01:28:35.965339+00:00",
+        "updated_at": "2026-05-30T01:28:35.965339+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 39,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:22:58.375955+00:00",
+        "updated_at": "2026-05-30T03:22:58.375955+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 40,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:31:35.948137+00:00",
+        "updated_at": "2026-05-30T03:31:35.948137+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 41,
+        "result": {
+          "driverId": "1",
+          "renderMode": "mapbox_image",
+          "snapshotId": "4",
+          "driverHandle": "owner",
+          "pingAgeSeconds": 83650,
+          "precisionLabel": "1km",
+          "effectiveRadius": 1000
+        },
+        "source": "telegram",
+        "payload": {
+          "radius_m": 1000,
+          "driverHandle": null
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:31:38.906719+00:00",
+        "updated_at": "2026-05-30T03:31:38.906719+00:00",
+        "command_raw": "area 1000",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "quick",
+        "command_domain": "area"
+      },
+      {
+        "id": 42,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:39:19.648697+00:00",
+        "updated_at": "2026-05-30T03:39:19.648697+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 43,
+        "result": {
+          "driverId": "1",
+          "renderMode": "mapbox_image",
+          "snapshotId": "7",
+          "driverHandle": "owner",
+          "pingAgeSeconds": 84115,
+          "precisionLabel": "50m",
+          "effectiveRadius": 50
+        },
+        "source": "telegram",
+        "payload": {
+          "radius_m": 50,
+          "driverHandle": null
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:39:23.201286+00:00",
+        "updated_at": "2026-05-30T03:39:23.201286+00:00",
+        "command_raw": "area 50",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "quick",
+        "command_domain": "area"
+      },
+      {
+        "id": 44,
+        "result": {
+          "driverId": "1",
+          "renderMode": "mapbox_image",
+          "snapshotId": "8",
+          "driverHandle": "owner",
+          "pingAgeSeconds": 84141,
+          "precisionLabel": "100m",
+          "effectiveRadius": 100
+        },
+        "source": "telegram",
+        "payload": {
+          "radius_m": 100,
+          "driverHandle": null
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:39:49.633307+00:00",
+        "updated_at": "2026-05-30T03:39:49.633307+00:00",
+        "command_raw": "area 100",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "quick",
+        "command_domain": "area"
+      },
+      {
+        "id": 45,
+        "result": {
+          "status": "draft",
+          "tripId": "4"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "1p",
+          "orderText": "4520 papineau",
+          "clientName": "maya",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:47:31.537329+00:00",
+        "updated_at": "2026-05-30T03:47:31.537329+00:00",
+        "command_raw": "new maya\n4520 papineau\n1p",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 46,
+        "result": {
+          "status": "pending",
+          "tripId": 4,
+          "priorStatus": "draft"
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 4
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:47:50.805425+00:00",
+        "updated_at": "2026-05-30T03:47:50.805425+00:00",
+        "command_raw": "cb:trip:confirm:4",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 47,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "tripId": 4,
+          "driverHandle": "owner"
+        },
+        "success": false,
+        "created_at": "2026-05-30T03:48:42.015037+00:00",
+        "updated_at": "2026-05-30T03:48:42.015037+00:00",
+        "command_raw": "Trip assign 4 owner",
+        "executed_by": 7865010991,
+        "error_message": "driver @owner: not found",
+        "parsed_action": "assign",
+        "command_domain": "trip"
+      },
+      {
+        "id": 48,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T03:48:58.286558+00:00",
+        "updated_at": "2026-05-30T03:48:58.286558+00:00",
+        "command_raw": "Trip",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "list",
+        "command_domain": "trip"
+      },
+      {
+        "id": 49,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "tripId": 4,
+          "driverHandle": "owner"
+        },
+        "success": false,
+        "created_at": "2026-05-30T03:49:21.938409+00:00",
+        "updated_at": "2026-05-30T03:49:21.938409+00:00",
+        "command_raw": "Trip assign 4 @owner",
+        "executed_by": 7865010991,
+        "error_message": "driver @owner: not found",
+        "parsed_action": "assign",
+        "command_domain": "trip"
+      },
+      {
+        "id": 50,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:01:29.088164+00:00",
+        "updated_at": "2026-05-30T04:01:29.088164+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 51,
+        "result": {
+          "item_key": "b",
+          "quantity": 1
+        },
+        "source": "telegram",
+        "payload": {
+          "key": "b",
+          "qty": 1
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:02:14.973162+00:00",
+        "updated_at": "2026-05-30T04:02:14.973162+00:00",
+        "command_raw": "inv add b=1",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "add",
+        "command_domain": "inv"
+      },
+      {
+        "id": 52,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:02:16.837047+00:00",
+        "updated_at": "2026-05-30T04:02:16.837047+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 53,
+        "result": {
+          "item_key": "b",
+          "quantity": 4
+        },
+        "source": "telegram",
+        "payload": {
+          "key": "b",
+          "qty": 3
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:02:57.307094+00:00",
+        "updated_at": "2026-05-30T04:02:57.307094+00:00",
+        "command_raw": "inv add b=3",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "add",
+        "command_domain": "inv"
+      },
+      {
+        "id": 54,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:03:09.774836+00:00",
+        "updated_at": "2026-05-30T04:03:09.774836+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 55,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:04:10.777164+00:00",
+        "updated_at": "2026-05-30T04:04:10.777164+00:00",
+        "command_raw": "fin",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "fin"
+      },
+      {
+        "id": 56,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:04:29.137197+00:00",
+        "updated_at": "2026-05-30T04:04:29.137197+00:00",
+        "command_raw": "trip",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "list",
+        "command_domain": "trip"
+      },
+      {
+        "id": 57,
+        "result": {
+          "status": "voided",
+          "tripId": 4,
+          "priorStatus": "pending",
+          "assignmentsClosed": 0
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 4
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:04:36.567522+00:00",
+        "updated_at": "2026-05-30T04:04:36.567522+00:00",
+        "command_raw": "cb:trip:void:4",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "void",
+        "command_domain": "trip"
+      },
+      {
+        "id": 58,
+        "result": {
+          "status": "voided",
+          "tripId": 3,
+          "priorStatus": "pending",
+          "assignmentsClosed": 0
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 3
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:04:42.350753+00:00",
+        "updated_at": "2026-05-30T04:04:42.350753+00:00",
+        "command_raw": "cb:trip:void:3",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "void",
+        "command_domain": "trip"
+      },
+      {
+        "id": 59,
+        "result": {
+          "status": "voided",
+          "tripId": 2,
+          "priorStatus": "pending",
+          "assignmentsClosed": 0
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 2
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:04:47.959584+00:00",
+        "updated_at": "2026-05-30T04:04:47.959584+00:00",
+        "command_raw": "cb:trip:void:2",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "void",
+        "command_domain": "trip"
+      },
+      {
+        "id": 60,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:04:49.134077+00:00",
+        "updated_at": "2026-05-30T04:04:49.134077+00:00",
+        "command_raw": "trip",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "list",
+        "command_domain": "trip"
+      },
+      {
+        "id": 61,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:20:04.833259+00:00",
+        "updated_at": "2026-05-30T04:20:04.833259+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 62,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:35:39.94427+00:00",
+        "updated_at": "2026-05-30T04:35:39.94427+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 63,
+        "result": {
+          "status": "draft",
+          "tripId": "5"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "123 Main St",
+          "orderText": "1 small",
+          "clientName": "Maya",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:35:45.754157+00:00",
+        "updated_at": "2026-05-30T04:35:45.754157+00:00",
+        "command_raw": "new\nMaya\n1 small\n123 Main St\nasap",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 64,
+        "result": {
+          "status": "pending",
+          "tripId": 5,
+          "priorStatus": "draft",
+          "autoAssigned": null,
+          "candidateCount": 0
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 5,
+          "explicitHandle": null
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:35:49.294532+00:00",
+        "updated_at": "2026-05-30T04:35:49.294532+00:00",
+        "command_raw": "cb:trip:confirm:5",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 65,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "tripId": 5,
+          "driverHandle": "t"
+        },
+        "success": false,
+        "created_at": "2026-05-30T04:37:07.135793+00:00",
+        "updated_at": "2026-05-30T04:37:07.135793+00:00",
+        "command_raw": "trip assign 5 t",
+        "executed_by": 7865010991,
+        "error_message": "driver @t: not found",
+        "parsed_action": "assign",
+        "command_domain": "trip"
+      },
+      {
+        "id": 66,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:59:13.867939+00:00",
+        "updated_at": "2026-05-30T04:59:13.867939+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 67,
+        "result": {
+          "status": "draft",
+          "tripId": "6"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "4520 papineau",
+          "orderText": "1p",
+          "clientName": "maya",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:59:43.20282+00:00",
+        "updated_at": "2026-05-30T04:59:43.20282+00:00",
+        "command_raw": "New maya\n1p\n4520 papineau",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 68,
+        "result": {
+          "status": "pending",
+          "tripId": 6,
+          "priorStatus": "draft",
+          "autoAssigned": null,
+          "candidateCount": 0
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 6,
+          "explicitHandle": null
+        },
+        "success": true,
+        "created_at": "2026-05-30T04:59:49.159465+00:00",
+        "updated_at": "2026-05-30T04:59:49.159465+00:00",
+        "command_raw": "cb:trip:confirm:6",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 69,
+        "result": {
+          "status": "draft",
+          "tripId": "7"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "6666 sherbrooke",
+          "orderText": "11p",
+          "clientName": "Maya",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:03:06.263266+00:00",
+        "updated_at": "2026-05-30T05:03:06.263266+00:00",
+        "command_raw": "New\nMaya\n11p\n6666 sherbrooke",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 70,
+        "result": {
+          "status": "pending",
+          "tripId": 7,
+          "priorStatus": "draft",
+          "autoAssigned": null,
+          "candidateCount": 0
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 7,
+          "explicitHandle": null
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:03:09.251418+00:00",
+        "updated_at": "2026-05-30T05:03:09.251418+00:00",
+        "command_raw": "cb:trip:confirm:7",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 71,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:03:43.591391+00:00",
+        "updated_at": "2026-05-30T05:03:43.591391+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 72,
+        "result": {
+          "status": "draft",
+          "tripId": "8"
+        },
+        "source": "telegram",
+        "payload": {
+          "address": "6666 sherbrooke",
+          "orderText": "11p",
+          "clientName": "Maya",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:03:52.761138+00:00",
+        "updated_at": "2026-05-30T05:03:52.761138+00:00",
+        "command_raw": "New\nMaya\n11p\n6666 sherbrooke",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 73,
+        "result": {
+          "status": "active",
+          "tripId": 8,
+          "priorStatus": "draft",
+          "assignedLabel": "T",
+          "hasRecentPing": false
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 8,
+          "explicitLabel": "T"
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:03:59.386626+00:00",
+        "updated_at": "2026-05-30T05:03:59.386626+00:00",
+        "command_raw": "confirmwith 8 T",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      },
+      {
+        "id": 74,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:04:46.433224+00:00",
+        "updated_at": "2026-05-30T05:04:46.433224+00:00",
+        "command_raw": "trip",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "list",
+        "command_domain": "trip"
+      },
+      {
+        "id": 75,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {
+            "tripId": "8"
+          }
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:04:54.406045+00:00",
+        "updated_at": "2026-05-30T05:04:54.406045+00:00",
+        "command_raw": "trip detail 8",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "detail",
+        "command_domain": "trip"
+      },
+      {
+        "id": 76,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:30:21.803447+00:00",
+        "updated_at": "2026-05-30T05:30:21.803447+00:00",
+        "command_raw": "help",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "help",
+        "command_domain": "sys"
+      },
+      {
+        "id": 77,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:30:31.752891+00:00",
+        "updated_at": "2026-05-30T05:30:31.752891+00:00",
+        "command_raw": "inv",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "inv"
+      },
+      {
+        "id": 78,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:30:35.37028+00:00",
+        "updated_at": "2026-05-30T05:30:35.37028+00:00",
+        "command_raw": "fin",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "summary",
+        "command_domain": "fin"
+      },
+      {
+        "id": 79,
+        "result": null,
+        "source": "telegram",
+        "payload": {
+          "args": {}
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:31:52.935564+00:00",
+        "updated_at": "2026-05-30T05:31:52.935564+00:00",
+        "command_raw": "fin clients",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "clients",
+        "command_domain": "fin"
+      },
+      {
+        "id": 80,
+        "result": {
+          "status": "draft",
+          "tripId": "9"
+        },
+        "source": "telegram",
+        "payload": {
+          "price": 300,
+          "address": "4555 papineau",
+          "orderText": "3p",
+          "clientName": "jay",
+          "requestedTime": "asap"
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:32:10.145958+00:00",
+        "updated_at": "2026-05-30T05:32:10.145958+00:00",
+        "command_raw": "new jay\n3p\n4555 papineau\n300",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "new",
+        "command_domain": "trip"
+      },
+      {
+        "id": 81,
+        "result": {
+          "status": "active",
+          "tripId": 9,
+          "priorStatus": "draft",
+          "assignedLabel": "T",
+          "hasRecentPing": false
+        },
+        "source": "telegram",
+        "payload": {
+          "tripId": 9,
+          "explicitLabel": "T"
+        },
+        "success": true,
+        "created_at": "2026-05-30T05:32:16.686127+00:00",
+        "updated_at": "2026-05-30T05:32:16.686127+00:00",
+        "command_raw": "confirmwith 9 T",
+        "executed_by": 7865010991,
+        "error_message": null,
+        "parsed_action": "confirm",
+        "command_domain": "trip"
+      }
+    ],
+    "eta_snapshots": [],
+    "finance_wallet": [
+      {
+        "id": 1,
+        "pay": 0.0,
+        "notes": null,
+        "balance": 0.0,
+        "created_at": "2026-05-28T13:57:56.612027+00:00",
+        "updated_at": "2026-05-28T13:57:56.612027+00:00",
+        "last_updated_by": null
+      }
+    ],
+    "staged_prompts": [],
+    "driver_assignments": [
+      {
+        "id": 1,
+        "notes": null,
+        "trip_id": 8,
+        "driver_id": 1,
+        "is_active": true,
+        "created_at": "2026-05-30T05:03:59.386626+00:00",
+        "updated_at": "2026-05-30T05:03:59.386626+00:00",
+        "assigned_at": "2026-05-30T05:03:59.386626+00:00",
+        "unassigned_at": null
+      },
+      {
+        "id": 2,
+        "notes": null,
+        "trip_id": 9,
+        "driver_id": 1,
+        "is_active": true,
+        "created_at": "2026-05-30T05:32:16.686127+00:00",
+        "updated_at": "2026-05-30T05:32:16.686127+00:00",
+        "assigned_at": "2026-05-30T05:32:16.686127+00:00",
+        "unassigned_at": null
+      }
+    ],
+    "finance_transactions": []
+  },
+  "project": "tludtcrrumfghzjbwcso (ccv10)",
+  "captured_at": "2026-05-30T22:04:17.055056+00:00"
+}
