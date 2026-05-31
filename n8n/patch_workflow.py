@@ -290,7 +290,7 @@ new_help = (
 "WALLET\\n  wallet                    cash, pay, total, front out\\n  wallet add <n>            deposit cash\\n  wallet sub <n>            withdraw cash\\n  wallet set <n>            overwrite cash\\n  wallet reset              cash to 0\\n  wallet pay add/sub/set <n>  adjust pay\\n  wallet pay reset          pay to 0\\n  wallet paid <name> [amt]  client paid (full/partial)\\n  (keyboard Add / Sub / Paid ask for the value as a prompt)\\n\\n"
 "FRONT\\n  front                     list open tabs\\n  front <name>              one client tab\\n  front ord-N <amt>         mark order fronted\\n  front void <name> ord-N   forgive a fronted order\\n  (or tap \\ud83d\\udfe7 on an order card, then send the amount)\\n\\n"
 "CLIENTS\\n  clients                   list clients\\n  client <name> [balance]   history / outstanding balance\\n\\n"
-"INVENTORY\\n  inv                       show stock\\n  inv add c=10 p=5          add to stock\\n  inv set c=8               overwrite stock\\n  inv reset [product]       zero all stock, or one product\\n\\n"
+"INVENTORY\\n  inv                       all stock (main/T/FISTON/total)\\n  inv main / t / fiston     one bucket\\n  inv total                 combined total\\n  inv add c=10 p=5          add to MAIN\\n  inv set c=8               overwrite MAIN\\n  inv reset [product]       zero MAIN (all or one)\\n  transfer t c=4            move MAIN -> driver (t/fiston)\\n  return t c=4              move driver -> MAIN\\n\\n"
 "KEYBOARD\\n  kb / keyboard             show the button pad\\n\\n"
 "DISPATCH\\n  eta <address>             real-time ETA');\n"
 "}"
@@ -597,9 +597,17 @@ code = replace_once(code,
 r"""function cmd_invT() { return send(fmtStock('T STOCK', 't')); }
 function cmd_invFiston() { return send(fmtStock('FISTON STOCK', 'fiston')); }
 function cmd_invTotal() { return send(fmtStockTotal()); }
+function cmd_invMain() { return send(fmtStock('MAIN STOCK', 'main')); }
+function fmtAllStock() {
+  return [fmtStock('MAIN STOCK', 'main'), fmtStock('T STOCK', 't'),
+          fmtStock('FISTON STOCK', 'fiston'), fmtStockTotal()].join('\n\n');
+}
 
 // transfer moves on-hand between buckets only (total unchanged).
 // dir 'out' = Main -> driver ; dir 'in' = driver -> Main.
+// Requested quantities are accumulated PER PRODUCT and the total is validated
+// strictly against the current source-bucket remaining (Main for 'out'), so an
+// allocation can never exceed what the source actually holds.
 function transferMove(arg, dir) {
   var parts = (arg || '').split(/\s+/);
   var who = parts[0];
@@ -608,19 +616,22 @@ function transferMove(arg, dir) {
   var src = dir === 'out' ? data.inventory : stockBucket(bucketKey);
   var dst = dir === 'out' ? stockBucket(bucketKey) : data.inventory;
   var srcName = dir === 'out' ? 'Main' : who.toUpperCase();
-  var moves = [], i;
+  var req = {}, i;
   for (i = 1; i < parts.length; i++) {
     var kv = parts[i].split('=');
     var k = kv[0], v = parseInt(kv[1], 10);
-    if (validProducts.indexOf(k) >= 0 && !isNaN(v) && v > 0) {
-      if ((src[k] || 0) < v) { return send('not enough ' + k + ' in ' + srcName + ' (have ' + (src[k] || 0) + ')'); }
-      moves.push({ k: k, v: v });
+    if (validProducts.indexOf(k) >= 0 && !isNaN(v) && v > 0) { req[k] = (req[k] || 0) + v; }
+  }
+  var keys = Object.keys(req);
+  if (keys.length === 0) { return send('nothing to move. format: transfer <t|fiston> c=5'); }
+  for (i = 0; i < keys.length; i++) {
+    if ((src[keys[i]] || 0) < req[keys[i]]) {
+      return send('not enough ' + keys[i] + ' in ' + srcName + ' (have ' + (src[keys[i]] || 0) + ', need ' + req[keys[i]] + ')');
     }
   }
-  if (moves.length === 0) { return send('nothing to move. format: transfer <t|fiston> c=5'); }
-  for (i = 0; i < moves.length; i++) {
-    src[moves[i].k] = (src[moves[i].k] || 0) - moves[i].v;
-    dst[moves[i].k] = (dst[moves[i].k] || 0) + moves[i].v;
+  for (i = 0; i < keys.length; i++) {
+    src[keys[i]] = (src[keys[i]] || 0) - req[keys[i]];
+    dst[keys[i]] = (dst[keys[i]] || 0) + req[keys[i]];
   }
   pushLog(dir === 'out' ? 'stock_transfer' : 'stock_return', { bucket: bucketKey, raw: arg });
   return send(fmtStock(bucketKey === 't' ? 'T STOCK' : 'FISTON STOCK', bucketKey));
@@ -641,9 +652,15 @@ code = replace_once(code,
 "undo-no-restock")
 
 # command tables: bucket views + transfer/return
+# plain `inv` shows all 4 sections; `inv main` shows MAIN only
+code = replace_once(code,
+"function cmd_inv() { return send(fmtInv()); }",
+"function cmd_inv() { return send(fmtAllStock()); }",
+"inv-all-sections")
+
 code = replace_once(code,
 "  'c inv reset':        cmd_invResetAll,",
-"  'c inv reset':        cmd_invResetAll,\n  'c inv main':         cmd_inv,\n  'c inv t':            cmd_invT,\n  'c inv fiston':       cmd_invFiston,\n  'c inv total':        cmd_invTotal,",
+"  'c inv reset':        cmd_invResetAll,\n  'c inv main':         cmd_invMain,\n  'c inv t':            cmd_invT,\n  'c inv fiston':       cmd_invFiston,\n  'c inv total':        cmd_invTotal,",
 "inv-exact")
 code = replace_once(code,
 "  ['c inv reset ',       cmd_invResetOne],",

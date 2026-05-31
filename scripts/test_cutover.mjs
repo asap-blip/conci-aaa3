@@ -207,6 +207,22 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
   await run(ROUTER, msg('return t c=2'));
   check('return T->Main', store.doc.inv_t.c === 2 && store.doc.inventory.c === 8, { t: store.doc.inv_t.c, main: store.doc.inventory.c });
 
+  // 13. transfer over-allocation strictly blocked against Main remaining
+  store.doc.orders = []; store.doc.inventory = { c: 6 }; store.doc.inv_t = {}; store.doc.inv_fiston = {};
+  await run(ROUTER, msg('transfer t c=4'));
+  const over = await run(ROUTER, msg('transfer fiston c=3'));
+  check('2nd transfer blocked (6 - 4 < 3)', /not enough c in Main/.test(over[0].json.text), over[0].json.text);
+  check('Main/T/FISTON consistent after block', store.doc.inventory.c === 2 && store.doc.inv_t.c === 4 && !(store.doc.inv_fiston.c > 0), { m: store.doc.inventory.c, t: store.doc.inv_t.c, f: store.doc.inv_fiston.c });
+  const dup = await run(ROUTER, msg('transfer fiston c=1 c=3')); // same-product duplicate in one cmd
+  check('duplicate-product over-allocation blocked', /not enough c in Main/.test(dup[0].json.text), dup[0].json.text);
+  check('block left Main untouched', store.doc.inventory.c === 2, store.doc.inventory.c);
+
+  // 14. plain `inv` shows all 4 sections; `inv main` shows only MAIN
+  const allv = await run(ROUTER, msg('inv'));
+  check('plain inv has all 4 sections', ['MAIN STOCK', 'T STOCK', 'FISTON STOCK', 'TOTAL STOCK'].every((s) => allv[0].json.text.includes(s)), allv[0].json.text.slice(0, 40));
+  const mainOnly = await run(ROUTER, msg('inv main'));
+  check('inv main = MAIN only', /MAIN STOCK/.test(mainOnly[0].json.text) && !/T STOCK/.test(mainOnly[0].json.text));
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('HARNESS ERROR', e); process.exit(2); });
