@@ -136,6 +136,29 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
   check('re-tap no double cash', store.doc.wallet.cash === cashAfter, store.doc.wallet.cash);
   check('re-tap no double pay', store.doc.wallet.pay === payAfter, store.doc.wallet.pay);
 
+  // 9. PURGE wallet — 2-step: stage -> step1 ✅ -> step2 ✅ erases from SB doc
+  store.doc.wallet = { cash: 500, pay: 80, updated_at: null };
+  let pr2 = await run(ROUTER, msg('purge wallet'));
+  const pTok = pr2[0].json.token;
+  check('purge stages action', !!pTok && store.doc.pending_actions[pTok] && store.doc.pending_actions[pTok].type === 'purge' && store.doc.pending_actions[pTok].stage === 1, store.doc.pending_actions);
+  check('purge step1 card has purge_next', JSON.stringify(pr2[0].json.telegram_body.reply_markup).includes('purge_next:' + pTok));
+  let pr3 = await run(CALLBACK, cbq('purge_next:' + pTok, 7001));
+  check('purge step1 -> stage 2', store.doc.pending_actions[pTok] && store.doc.pending_actions[pTok].stage === 2);
+  check('purge step2 card emitted (FINAL CONFIRM + purge_apply)', /FINAL CONFIRM/.test(pr3[0].json.confirm_card_text || '') && JSON.stringify(pr3[0].json.confirm_card_markup).includes('purge_apply:' + pTok));
+  check('purge not yet applied (wallet intact)', store.doc.wallet.cash === 500 && store.doc.wallet.pay === 80, store.doc.wallet);
+  await run(CALLBACK, cbq('purge_apply:' + pTok, 7001));
+  check('purge applied: wallet zeroed in SB doc', store.doc.wallet.cash === 0 && store.doc.wallet.pay === 0, store.doc.wallet);
+  check('purge action consumed', !store.doc.pending_actions[pTok]);
+  check('purge audited', store.events.some((e) => e.action === 'purge_wallet_applied'));
+
+  // 10. CANCEL leaves data untouched (purge front -> discard at step 1)
+  store.doc.front = { jay: { total: 40, orders: [{ id: 'ord-9', amount: 40, ts: 1, paid_history: [] }] } };
+  let pf = await run(ROUTER, msg('purge front'));
+  const fTok2 = pf[0].json.token;
+  await run(CALLBACK, cbq('discard_action:' + fTok2, 7002));
+  check('cancel removes pending purge', !store.doc.pending_actions[fTok2]);
+  check('cancel leaves front data intact', store.doc.front.jay && store.doc.front.jay.total === 40, store.doc.front);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error('HARNESS ERROR', e); process.exit(2); });

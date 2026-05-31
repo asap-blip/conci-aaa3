@@ -71,7 +71,7 @@ code = replace_once(code,
 
 // Operator command words (prefix-free). Used by the gate-free router to tell a
 // command from order intake. Each maps to an existing 'c xxx' dispatch key.
-var COMMAND_HEADS = ['wallet','jobs','front','inv','client','clients','summary','backup','undo','cancel','void','edit','eta','kb','keyboard','cmd','commands','new'];""",
+var COMMAND_HEADS = ['wallet','jobs','front','inv','client','clients','summary','backup','undo','cancel','void','edit','eta','kb','keyboard','cmd','commands','new','purge'];""",
 "COMMAND_HEADS")
 
 # emitNewOrderMenu helper: add right after emitWithKeyboard's closing (anchor on
@@ -177,7 +177,7 @@ code = replace_once(code,
 # add 'c new' exact command + cmd_newOrderMenu (register in exactCommands)
 code = replace_once(code,
 "  'c clients':          cmd_clients\n};",
-"  'c clients':          cmd_clients,\n  'c new':              emitNewOrderMenu\n};",
+"  'c clients':          cmd_clients,\n  'c new':              emitNewOrderMenu,\n  'c purge wallet':     cmd_purgeWallet,\n  'c purge inv':        cmd_purgeInv,\n  'c purge front':      cmd_purgeFront\n};",
 "exact-new")
 
 # --- 6. remove Claude operator commands from exactCommands -------------------
@@ -440,6 +440,33 @@ code = replace_once(code,
 "  formCardLines.push(htmlEsc(formTime || '[no time]') + '  ' + htmlEsc(formPending.address) + ' ' + mapsLink(formPending.address));\n  formCardLines.push('\\ud83d\\uddfa Maps: ' + mapsUrlPlain(formPending.address));",
 "form-card-maps")
 
+# --- purge handlers (2-step destructive, active period only) -----------------
+# Stages a pending_action and emits the Step-1 confirm card. Reuses the existing
+# emitConfirmCard staged-action style (✅ purge_next:token / ❌ discard_action:token).
+code = replace_once(code,
+"var exactCommands = {",
+r"""// ----- purge (separate by business area; 2-step confirm; SB, active period) -----
+function stagePurge(area) {
+  var actToken = 'act-' + data.next_action_id;
+  data.next_action_id = data.next_action_id + 1;
+  data.pending_actions[actToken] = { token: actToken, type: 'purge', area: area, stage: 1, staged_by: userId, staged_at: nowTs };
+  pushLog('purge_staged', { area: area, action_token: actToken });
+  var label = area === 'inv' ? 'INVENTORY' : (area === 'front' ? 'FRONT' : 'WALLET');
+  var noun = area === 'inv' ? 'inventory' : area;
+  var lines = [];
+  lines.push('PURGE ' + label);
+  lines.push('This will erase ' + noun + ' data from SB for the active period.');
+  lines.push('This cannot be undone.');
+  lines.push('Step 1 of 2.');
+  return emitConfirmCard(lines.join('\n'), 'purge_next', actToken);
+}
+function cmd_purgeWallet() { return stagePurge('wallet'); }
+function cmd_purgeInv() { return stagePurge('inv'); }
+function cmd_purgeFront() { return stagePurge('front'); }
+
+var exactCommands = {""",
+"purge-handlers")
+
 # write code back
 nodes['Code']['parameters']['jsCode'] = code
 
@@ -472,6 +499,76 @@ cb = replace_once(cb,
   auditAction = 'new_order_prompt';
 } else if (action === 'discard_action') {""",
 "cb-new-order")
+
+# purge: declare step-2 card output vars
+cb = replace_once(cb,
+"var snippetMessageText = null; // v7.6.3: set when handling copy_snippet callback",
+"var snippetMessageText = null; // v7.6.3: set when handling copy_snippet callback\n"
+"var confirmCardText = null;    // purge: drives the Step-2 final-confirm card\n"
+"var confirmCardMarkup = null;  // purge: inline buttons for the Step-2 card",
+"cb-purge-vars")
+
+# purge: Step-1 ✅ (purge_next) emits Step-2 card; Step-2 ✅ (purge_apply) erases
+cb = replace_once(cb,
+"} else if (action === 'discard_action') {",
+r"""} else if (action === 'purge_next') {
+  var pgA = data.pending_actions[token];
+  if (!pgA || pgA.type !== 'purge') {
+    responseText = 'purge ' + token + ' not found or already handled.';
+    auditAction = 'callback_stale_action';
+  } else {
+    pgA.stage = 2;
+    var pgLabel = pgA.area === 'inv' ? 'INVENTORY' : (pgA.area === 'front' ? 'FRONT' : 'WALLET');
+    var pgNoun = pgA.area === 'inv' ? 'inventory' : pgA.area;
+    responseText = 'PURGE ' + pgLabel + '\nstep 1 confirmed — final confirm below.';
+    confirmCardText = ['FINAL CONFIRM · PURGE ' + pgLabel,
+      'You are about to erase ' + pgNoun + ' data from SB.',
+      'No undo.', 'Step 2 of 2.'].join('\n');
+    confirmCardMarkup = { inline_keyboard: [[
+      { text: '✅', callback_data: 'purge_apply:' + token },
+      { text: '❌', callback_data: 'discard_action:' + token }
+    ]] };
+    auditAction = 'purge_step2';
+  }
+} else if (action === 'purge_apply') {
+  var pgB = data.pending_actions[token];
+  if (!pgB || pgB.type !== 'purge' || pgB.stage !== 2) {
+    responseText = 'purge ' + token + ' not found or not confirmed.';
+    auditAction = 'callback_stale_action';
+  } else {
+    if (pgB.area === 'wallet') {
+      data.wallet = { cash: 0, pay: 0, updated_at: nowTs };
+      responseText = '✅ wallet data erased from SB (active period)';
+      auditAction = 'purge_wallet_applied';
+    } else if (pgB.area === 'inv') {
+      data.inventory = { c:0, '50c':0, p:0, '50p':0, b:0, '50k':0, k:0, m:0, s:0 };
+      responseText = '✅ inventory data erased from SB (active period)';
+      auditAction = 'purge_inv_applied';
+    } else if (pgB.area === 'front') {
+      data.front = {};
+      var pgi;
+      for (pgi = 0; pgi < data.orders.length; pgi++) { data.orders[pgi].front_amount = 0; }
+      var pgk;
+      for (pgk in data.pending) { if (data.pending.hasOwnProperty(pgk)) { data.pending[pgk].front_amount = 0; } }
+      responseText = '✅ front data erased from SB (active period)';
+      auditAction = 'purge_front_applied';
+    } else {
+      responseText = 'unknown purge area';
+      auditAction = 'callback_unknown';
+    }
+    delete data.pending_actions[token];
+  }
+} else if (action === 'discard_action') {""",
+"cb-purge-branches")
+
+# purge: expose step-2 card fields on the callback output
+cb = replace_once(cb,
+"    snippet_message_text: snippetMessageText // v7.6.3: drives Send Snippet HTTP node",
+"    snippet_message_text: snippetMessageText, // v7.6.3: drives Send Snippet HTTP node\n"
+"    confirm_card_text: confirmCardText,        // purge: drives Has Confirm Card? / Send Confirm Card HTTP\n"
+"    confirm_card_markup: confirmCardMarkup",
+"cb-purge-return")
+
 nodes['Callback Handler']['parameters']['jsCode'] = cb
 
 # --- 7. Auth gate: drop the 'c'-prefix condition, keep auth + existence ------
@@ -512,6 +609,53 @@ for _nm in ['Code', 'Callback Handler']:
     _new = _externalize_dispatch(_js)
     assert _new != _js, 'dispatch externalization no-op in ' + _nm
     nodes[_nm]['parameters']['jsCode'] = _new
+
+# --- purge: two isolated nodes for the Step-2 confirm card (callback-side) ----
+# Additive only; fire solely when Callback Handler sets confirm_card_text
+# (i.e. on purge_next). No existing node/flow is modified.
+assert not any(n['name'] in ('Has Confirm Card?', 'Send Confirm Card HTTP') for n in d['nodes']), "purge nodes already present"
+d['nodes'].append({
+  "parameters": {
+    "conditions": {
+      "options": {"caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 3},
+      "conditions": [{
+        "id": "c0nf1rmd-card-cond-000000000001",
+        "leftValue": "={{ $('Callback Handler').item.json.confirm_card_text }}",
+        "rightValue": "",
+        "operator": {"type": "string", "operation": "exists", "singleValue": True}
+      }],
+      "combinator": "and"
+    },
+    "options": {}
+  },
+  "type": "n8n-nodes-base.if",
+  "typeVersion": 2.3,
+  "position": [-4144, 6120],
+  "id": "11111111-purge-conf-0000-000000000001",
+  "name": "Has Confirm Card?"
+})
+d['nodes'].append({
+  "parameters": {
+    "method": "POST",
+    "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+    "sendHeaders": True,
+    "headerParameters": {"parameters": [{"name": "content-type", "value": "application/json"}]},
+    "sendBody": True,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ chat_id: $('Callback Handler').item.json.chat_id, text: $('Callback Handler').item.json.confirm_card_text, reply_markup: $('Callback Handler').item.json.confirm_card_markup }) }}",
+    "options": {}
+  },
+  "type": "n8n-nodes-base.httpRequest",
+  "typeVersion": 4.4,
+  "position": [-3904, 6120],
+  "id": "11111111-purge-send-0000-000000000002",
+  "name": "Send Confirm Card HTTP"
+})
+# wire: Telegram Answer Callback -> Has Confirm Card? -> Send Confirm Card HTTP
+_ac = d['connections']['Telegram Answer Callback']['main'][0]
+assert not any(c['node'] == 'Has Confirm Card?' for c in _ac), "answer-callback wiring already present"
+_ac.append({"node": "Has Confirm Card?", "type": "main", "index": 0})
+d['connections']['Has Confirm Card?'] = {"main": [[{"node": "Send Confirm Card HTTP", "type": "main", "index": 0}]]}
 
 # bump workflow name so it's distinguishable on import
 d['name'] = 'concierge (hardened operator UX)'
