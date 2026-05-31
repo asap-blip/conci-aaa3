@@ -1,0 +1,645 @@
+{
+  "name": "concierge-dispatch",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "concierge-loc-lNZGT7cwRyg",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "57172530-d9d6-48af-8c74-44a8da19b171",
+      "name": "Location Ping Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "concierge-loc-lNZGT7cwRyg"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT driver_id, driver_handle, auth_method FROM (\n  SELECT d.id AS driver_id, d.handle AS driver_handle, 'per_driver'::text AS auth_method\n  FROM drivers d\n  WHERE d.is_active = true AND d.ping_secret = $1::text\n  LIMIT 1\n) resolved\nUNION ALL\nSELECT NULL::bigint, NULL::text, 'unauthorized'::text\nWHERE NOT EXISTS (\n  SELECT 1 FROM drivers d\n  WHERE d.is_active = true AND d.ping_secret = $1::text\n);",
+        "options": {
+          "queryReplacement": "={{ $json.body?.auth ?? '' }}"
+        }
+      },
+      "id": "16f149f1-1c4d-4649-bf89-86f74b09ab7d",
+      "name": "Resolve Driver",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ulFVqhbxIwqKVncZ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// LOCATION PING HANDLER v0.4.0 (workflow v4)\n// Input shape: $json is the row from 'Resolve Driver' (one row, possibly NULL).\n// Original webhook body is accessed via $('Location Ping Webhook1').\n\nvar resolved = $json || {};\nvar pingInput = $('Location Ping Webhook1').item.json;\nvar body = pingInput.body || pingInput;\nvar nowTs = Math.floor(Date.now() / 1000);\n\nif (!resolved.driver_id || resolved.auth_method === 'unauthorized' || resolved.auth_method == null) {\n  return [{ json: { status: 401, body: { ok: false, error: 'unauthorized' } } }];\n}\n\nvar lat = parseFloat(body.lat);\nvar lng = parseFloat(body.lng);\nif (isNaN(lat) || isNaN(lng)) {\n  return [{ json: { status: 400, body: { ok: false, error: 'bad coordinates' } } }];\n}\nif (lat < -90 || lat > 90 || lng < -180 || lng > 180) {\n  return [{ json: { status: 400, body: { ok: false, error: 'coordinates out of range' } } }];\n}\n\nvar source = (body.source || 'unknown').toString().toLowerCase();\nif (['iphone', 'watch', 'manual', 'shortcut'].indexOf(source) === -1) source = 'unknown';\n\nreturn [{ json: {\n  status: 200,\n  body: {\n    ok: true,\n    received_at: nowTs,\n    location: { lat: lat, lng: lng, source: source },\n    driver: {\n      id: resolved.driver_id,\n      handle: resolved.driver_handle,\n      auth_method: resolved.auth_method\n    }\n  },\n  resolved_driver_id: resolved.driver_id\n} }];"
+      },
+      "id": "17e8fb7c-9970-46f5-b114-66cae0300b26",
+      "name": "Validate + Store1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "2ba9371a-8f5d-4749-b3cc-c879d4f3721c",
+      "name": "Respond to Location Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- v4: uses resolved_driver_id from upstream (no more 'WHERE role=owner').\nINSERT INTO location_pings (driver_id, lat, lng, source, ts)\nSELECT $1::bigint, $2::double precision, $3::double precision, $4::text, to_timestamp($5::bigint)\nWHERE $6::int = 200 AND $1::bigint IS NOT NULL\nON CONFLICT (driver_id, date_trunc('minute', (ts AT TIME ZONE 'UTC'))) DO NOTHING;",
+        "options": {
+          "queryReplacement": "={{ $json.resolved_driver_id ?? 0 }},{{ $json.body?.location?.lat ?? 0 }},{{ $json.body?.location?.lng ?? 0 }},{{ $json.body?.location?.source ?? 'unknown' }},{{ $json.body?.received_at ?? 0 }},{{ $json.status ?? 0 }}"
+        }
+      },
+      "id": "cd311af2-bbb6-4516-b216-6502f6a7b3e7",
+      "name": "DB Write Ping",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ulFVqhbxIwqKVncZ",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "concierge-eta-RDnNLM5WA1w",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b03960af-464d-4f5a-841c-93b7cd102793",
+      "name": "ETA Request Webhook (HTTP)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        512
+      ],
+      "webhookId": "concierge-eta-RDnNLM5WA1w"
+    },
+    {
+      "parameters": {
+        "jsCode": "// v4: also pulls optional driver_handle for per-driver ETA dispatch.\nvar SHARED_SECRET = $env.CONCIERGE_DISPATCH_SHARED_SECRET;\nvar body = $json.body || $json;\nvar auth = body.auth;\nvar address = body.address;\nvar driverHandle = body.driver_handle || body.driver || null;\n\nif (!SHARED_SECRET || auth !== SHARED_SECRET) {\n  return [{ json: { ok: false, short_circuit: true, error: 'unauthorized', _http_status: 401 } }];\n}\nif (!address || !address.toString().trim()) {\n  return [{ json: { ok: false, short_circuit: true, error: 'no address provided', _http_status: 400 } }];\n}\nreturn [{ json: {\n  address: address.toString().trim(),\n  driver_handle: driverHandle ? String(driverHandle).trim() : null\n} }];"
+      },
+      "id": "eecbc2f3-101f-461b-9e83-df24f3213ccc",
+      "name": "Normalize Webhook Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- v4: filter by driver_handle if provided; default to owner. Always one row.\n-- $1 = driver_handle or sentinel '__none__' (n8n drops empty-string params, so caller must send a sentinel).\nWITH found AS (\n  SELECT vp.driver_id, vp.lat, vp.lng, vp.source, vp.ts, vp.age_seconds,\n         d.handle AS driver_handle\n  FROM v_latest_ping vp\n  JOIN drivers d ON d.id = vp.driver_id\n  WHERE d.is_active = true\n    AND CASE\n      WHEN $1::text <> '__none__' THEN d.handle = $1::text\n      ELSE d.role = 'owner'\n    END\n  ORDER BY vp.ts DESC\n  LIMIT 1\n)\nSELECT * FROM found\nUNION ALL\nSELECT NULL::bigint, NULL::double precision, NULL::double precision, NULL::text,\n       NULL::timestamptz, NULL::integer, NULL::text\nWHERE NOT EXISTS (SELECT 1 FROM found);",
+        "options": {
+          "queryReplacement": "={{ $json.driver_handle || '__none__' }}"
+        }
+      },
+      "id": "70d0b13e-8a86-43ab-86f6-f1b5978357d4",
+      "name": "Read Latest Ping (DB)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        512
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ulFVqhbxIwqKVncZ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ETA REQUEST BUILDER v0.5.0 (workflow v4)\n// $json is the (always-one) row from Read Latest Ping (DB).\n// Original normalize output is at $('Normalize Webhook Input').\n\nvar GOOGLE_API_KEY = $env.GOOGLE_MAPS_API_KEY;\nvar normalized = $('Normalize Webhook Input').item.json;\n\nif (normalized.short_circuit === true) {\n  return [{ json: normalized }];\n}\n\nvar address = (normalized.address || '').toString().trim();\nvar nowTs = Math.floor(Date.now() / 1000);\n\nif (!address) {\n  return [{ json: { ok: false, error: 'no address provided', short_circuit: true } }];\n}\nif (!GOOGLE_API_KEY) {\n  return [{ json: { ok: false, error: 'google api key not configured', short_circuit: true } }];\n}\n\nvar pingRow = $json;\nif (!pingRow || pingRow.lat == null || pingRow.lng == null) {\n  var reason = normalized.driver_handle\n    ? ('no ping yet for driver \"' + normalized.driver_handle + '\" -- have them tap concierge ping on phone')\n    : 'no location ping yet -- tap concierge ping on phone';\n  return [{ json: { ok: false, error: reason, short_circuit: true } }];\n}\n\nvar loc = {\n  lat: Number(pingRow.lat),\n  lng: Number(pingRow.lng),\n  source: pingRow.source || 'unknown',\n  driver_id: pingRow.driver_id,\n  driver_handle: pingRow.driver_handle\n};\nvar pingTs = Math.floor(new Date(pingRow.ts).getTime() / 1000);\nvar locationAgeSec = nowTs - pingTs;\nvar locationStale = locationAgeSec > 900;\n\nvar destAddress = address;\nif (!/montreal|laval|brossard|quebec|qc|montréal/i.test(destAddress)) {\n  destAddress = destAddress + ', Montreal, QC, Canada';\n}\n\nvar url = 'https://maps.googleapis.com/maps/api/distancematrix/json' +\n  '?origins=' + loc.lat + ',' + loc.lng +\n  '&destinations=' + encodeURIComponent(destAddress) +\n  '&mode=driving' +\n  '&departure_time=now' +\n  '&units=metric' +\n  '&region=ca' +\n  '&key=' + GOOGLE_API_KEY;\n\nreturn [{ json: {\n  ok: true,\n  short_circuit: false,\n  url: url,\n  address_input: address,\n  address_resolved: destAddress,\n  origin: loc,\n  location_age_seconds: locationAgeSec,\n  location_stale: locationStale,\n  requested_at: nowTs\n} }];"
+      },
+      "id": "92ab1605-e8a3-46af-9219-ebe0a3998fbe",
+      "name": "Build ETA Request1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "short-circuit-check",
+              "leftValue": "={{ $json.short_circuit }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "eb7af29c-6f3a-48b5-a280-1e175182e486",
+      "name": "Should Call Google?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "00e5070b-0fde-456e-858b-d597bd265ca9",
+      "name": "Call Distance Matrix1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ETA RESPONSE PARSER v0.5.0 — unchanged from v3 (response shape stable).\nvar BUFFER_MIN = 5;\n\nvar response = $json;\nvar buildCtx = $('Build ETA Request1').item.json;\nif (response.status !== 'OK') {\n  return [{ json: { ok: false, error: 'google_api_error', google_status: response.status, google_message: response.error_message || null } }];\n}\nif (!response.rows || !response.rows[0] || !response.rows[0].elements || !response.rows[0].elements[0]) {\n  return [{ json: { ok: false, error: 'malformed_google_response', raw: response } }];\n}\nvar element = response.rows[0].elements[0];\nif (element.status !== 'OK') {\n  return [{ json: { ok: false, error: 'no_route_found', element_status: element.status, address_tried: buildCtx.address_resolved } }];\n}\nvar etaSeconds = (element.duration_in_traffic && element.duration_in_traffic.value) ? element.duration_in_traffic.value : element.duration.value;\nvar etaMinutes = Math.round(etaSeconds / 60);\nvar distanceMeters = element.distance.value;\nvar distanceKm = Math.round((distanceMeters / 1000) * 10) / 10;\nvar nowTs = Math.floor(Date.now() / 1000);\nvar arrivalTs = nowTs + etaSeconds;\nvar arrivalDate = new Date(arrivalTs * 1000);\n\nvar clientEtaMinutes = etaMinutes + BUFFER_MIN;\nvar clientArrivalDate = new Date((arrivalTs + BUFFER_MIN * 60) * 1000);\n\nfunction formatArrivalLabel(d) {\n  var fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit', hour12: true });\n  return fmt.format(d).toLowerCase().replace(/\\s/g, '');\n}\nvar arrivalLabel = formatArrivalLabel(arrivalDate);\nvar arrivalIso = arrivalDate.toISOString();\nvar clientArrivalLabel = formatArrivalLabel(clientArrivalDate);\nvar clientArrivalIso = clientArrivalDate.toISOString();\n\nvar origin = buildCtx.origin;\nvar mapsUrl = 'https://www.google.com/maps/dir/?api=1' +\n  '&origin=' + origin.lat + ',' + origin.lng +\n  '&destination=' + encodeURIComponent(buildCtx.address_resolved) +\n  '&travelmode=driving';\n\nreturn [{ json: {\n  ok: true,\n  eta_seconds: etaSeconds,\n  eta_minutes: etaMinutes,\n  distance_m: distanceMeters,\n  distance_km: distanceKm,\n  distance_text: element.distance.text,\n  duration_text: (element.duration_in_traffic && element.duration_in_traffic.text) || element.duration.text,\n  arrival_iso: arrivalIso,\n  arrival_label: arrivalLabel,\n  client_eta_minutes: clientEtaMinutes,\n  client_arrival_iso: clientArrivalIso,\n  client_arrival_label: clientArrivalLabel,\n  buffer_minutes: BUFFER_MIN,\n  maps_url: mapsUrl,\n  origin: origin,\n  address_input: buildCtx.address_input,\n  address_resolved: buildCtx.address_resolved,\n  location_age_seconds: buildCtx.location_age_seconds,\n  location_stale: buildCtx.location_stale,\n  calculated_at: nowTs\n} }];"
+      },
+      "id": "30d94263-b173-409f-afff-293f9797fe9d",
+      "name": "Parse ETA Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO eta_snapshots (\n  driver_id, origin_lat, origin_lng, dest_text, dest_resolved,\n  eta_seconds, distance_m, buffer_minutes,\n  internal_eta_at, client_eta_at,\n  location_age_seconds, location_stale, raw_response\n)\nVALUES (\n  $1::bigint, $2::double precision, $3::double precision, $4::text, $5::text,\n  $6::int, $7::int, $8::int,\n  to_timestamp($9::bigint), to_timestamp($10::bigint),\n  $11::int, $12::boolean, $13::jsonb\n)\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ $json.origin?.driver_id ?? 0 }},{{ $json.origin?.lat ?? 0 }},{{ $json.origin?.lng ?? 0 }},{{ $json.address_input }},{{ $json.address_resolved }},{{ $json.eta_seconds ?? 0 }},{{ $json.distance_m ?? 0 }},{{ $json.buffer_minutes ?? 5 }},{{ $json.calculated_at ?? 0 }} + {{ $json.eta_seconds ?? 0 }},{{ $json.calculated_at ?? 0 }} + {{ $json.eta_seconds ?? 0 }} + ({{ $json.buffer_minutes ?? 5 }} * 60),{{ $json.location_age_seconds ?? 0 }},{{ $json.location_stale ?? false }},{{ JSON.stringify($json) }}"
+        }
+      },
+      "id": "3e79a1ff-eac0-44b0-ac89-a0d8e3d271ef",
+      "name": "DB Write ETA Snapshot",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1680,
+        432
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ulFVqhbxIwqKVncZ",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "var etaPayload = $('Parse ETA Response1').item.json;\nvar snapRow = $json;\nvar snapshotId = (snapRow && typeof snapRow.id === 'number') ? snapRow.id : null;\nreturn [{ json: Object.assign({}, etaPayload, { snapshot_id: snapshotId }) }];"
+      },
+      "id": "ca5788bf-9af9-4d79-9a07-fbc7466e786f",
+      "name": "Merge Snapshot ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "b2599251-8fe7-47c5-8f2e-bfe57f855c4e",
+      "name": "Respond to ETA Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "concierge-area-RDnNLM5WA1w",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6983b8cf-f83b-4fdf-83f1-45aaa6d01822",
+      "name": "Area Snapshot Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        992
+      ],
+      "webhookId": "concierge-area-RDnNLM5WA1w"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- v4: filter by driver_handle from webhook payload; default to owner. Always one row.\n-- $1 = driver_handle or sentinel '__none__' (n8n drops empty-string params, so caller must send a sentinel).\nWITH found AS (\n  SELECT vp.driver_id, vp.lat, vp.lng, vp.ts, vp.age_seconds, d.handle AS driver_handle\n  FROM v_latest_ping vp\n  JOIN drivers d ON d.id = vp.driver_id\n  WHERE d.is_active = true\n    AND CASE\n      WHEN $1::text <> '__none__' THEN d.handle = $1::text\n      ELSE d.role = 'owner'\n    END\n  ORDER BY vp.ts DESC\n  LIMIT 1\n)\nSELECT * FROM found\nUNION ALL\nSELECT NULL::bigint, NULL::double precision, NULL::double precision,\n       NULL::timestamptz, NULL::integer, NULL::text\nWHERE NOT EXISTS (SELECT 1 FROM found);",
+        "options": {
+          "queryReplacement": "={{ $json.body?.driver_handle || $json.body?.driver || '__none__' }}"
+        }
+      },
+      "id": "3b540b83-1e72-4b33-a281-a57186e8ff23",
+      "name": "Read Latest Ping (area)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        992
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ulFVqhbxIwqKVncZ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// /area-snapshot — Client Area Snapshot generator (§6). v4: optional driver_handle.\n// Keep jitter logic in sync with scripts/jitter.ts.\n\nvar SHARED_SECRET = $env.CONCIERGE_DISPATCH_SHARED_SECRET;\nvar webhookData = $('Area Snapshot Webhook').item.json;\nvar pingRow = $json;\nvar body = webhookData.body || webhookData;\n\nconsole.log(\n  'auth len/type',\n  typeof body?.auth,\n  (body?.auth || '').length\n);\nconsole.log(\n  'secret set?',\n  !!SHARED_SECRET,\n  typeof SHARED_SECRET,\n  (SHARED_SECRET || '').length\n);\n\nif (!SHARED_SECRET || !body || body.auth !== SHARED_SECRET) {\n  return [{ json: { status: 401, body: { ok: false, error: 'unauthorized' } } }];\n}\n\nvar radiusM = parseInt(body.radius_m, 10);\nif (![1000, 2000, 5000].includes(radiusM)) {\n  return [{ json: { status: 400, body: { ok: false, error: 'radius_m must be 1000, 2000, or 5000' } } }];\n}\nvar label = radiusM === 1000 ? '1km' : radiusM === 2000 ? '2km' : '5km';\n\nif (!pingRow || pingRow.lat == null) {\n  var reason = body.driver_handle\n    ? ('no_ping_for_driver:' + body.driver_handle)\n    : 'no_ping_yet';\n  return [{ json: { status: 409, body: { ok: false, error: reason } } }];\n}\nvar age = Number(pingRow.age_seconds);\nif (!isFinite(age) || age > 900) {\n  return [{ json: { status: 409, body: { ok: false, error: 'location_stale', age_seconds: age } } }];\n}\n\n// --- jitter (inlined from scripts/jitter.ts) ---\nfunction seededRandom(seed) {\n  var x = (seed + 0x6D2B79F5) >>> 0;\n  var r = (x ^ (x >>> 15)) >>> 0;\n  r = Math.imul(r, 1 | r) >>> 0;\n  r = (r ^ (r + Math.imul(r ^ (r >>> 7), 61 | r))) >>> 0;\n  return ((r ^ (r >>> 14)) >>> 0) / 4294967296;\n}\nfunction hashTwo(a, b) {\n  return (Math.imul(a | 0, 2654435761) + Math.imul(b | 0, 2246822519)) >>> 0;\n}\nfunction jitterFraction(driverId, hourBucket, axis) {\n  var seed = hashTwo(driverId, hourBucket * 2 + axis);\n  return seededRandom(seed) * 0.5 - 0.25;\n}\n\nvar grid = radiusM === 1000 ? 0.01 : radiusM === 2000 ? 0.02 : 0.05;\nvar lat = Number(pingRow.lat);\nvar lng = Number(pingRow.lng);\nvar driverId = Number(pingRow.driver_id);\nvar qLat = Math.round(lat / grid) * grid;\nvar qLng = Math.round(lng / grid) * grid;\n\nvar hourBucket = Math.floor(Date.now() / 3600000);\nvar jLatFrac = jitterFraction(driverId, hourBucket, 0);\nvar jLngFrac = jitterFraction(driverId, hourBucket, 1);\nvar latDegPerM = 1 / 111111;\nvar lngDegPerM = 1 / (111111 * Math.cos((qLat * Math.PI) / 180));\nvar centerLat = qLat + jLatFrac * radiusM * latDegPerM;\nvar centerLng = qLng + jLngFrac * radiusM * lngDegPerM;\n\nvar mapUrl = 'https://www.google.com/maps/?q=' + centerLat + ',' + centerLng;\nvar expiresInSec = 1800; // 30 min\nvar expiresAtIso = new Date(Date.now() + expiresInSec * 1000).toISOString();\n\nreturn [{ json: {\n  _insert: {\n    driver_id: driverId,\n    center_lat: centerLat,\n    center_lng: centerLng,\n    radius_m: radiusM,\n    precision_label: label,\n    expires_at: expiresAtIso,\n    map_url: mapUrl,\n    trip_id: body.trip_id != null ? Number(body.trip_id) : null,\n    client_id: body.client_id != null ? Number(body.client_id) : null\n  },\n  status: 200,\n  body: {\n    ok: true,\n    map_url: mapUrl,\n    radius_label: label,\n    radius_m: radiusM,\n    expires_at: expiresAtIso,\n    ping_age_seconds: age,\n    driver_handle: pingRow.driver_handle\n  }\n} }];"
+      },
+      "id": "a2a11fa9-3550-4dc1-a210-dad816c77693",
+      "name": "Compute Area Snapshot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "area-ok-check",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5d115148-d080-4e27-9097-6942fb10499b",
+      "name": "Snapshot OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Optional trip_id/client_id arrive as '__none__' sentinel when JS-null, because n8n stringifies null to the literal text 'null' which breaks ::bigint cast.\nINSERT INTO client_area_snapshots (\n  driver_id, order_id, client_id, center_lat, center_lng, radius_m,\n  precision_label, expires_at, map_url\n)\nVALUES (\n  $1::bigint,\n  NULLIF($2::text, '__none__')::bigint,\n  NULLIF($3::text, '__none__')::bigint,\n  $4::double precision, $5::double precision,\n  $6::int, $7::text, $8::timestamptz, $9::text\n)\nON CONFLICT (driver_id, radius_m, date_trunc('hour', (created_at AT TIME ZONE 'UTC')))\nDO NOTHING\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ $json._insert.driver_id }},{{ $json._insert.trip_id ?? '__none__' }},{{ $json._insert.client_id ?? '__none__' }},{{ $json._insert.center_lat }},{{ $json._insert.center_lng }},{{ $json._insert.radius_m }},{{ $json._insert.precision_label }},{{ $json._insert.expires_at }},{{ $json._insert.map_url }}"
+        }
+      },
+      "id": "bb333f1a-110a-433f-b0a6-86369638a688",
+      "name": "DB Write Area Snapshot",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        960,
+        896
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "ulFVqhbxIwqKVncZ",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Compute Area Snapshot').item.json.body }}",
+        "options": {
+          "responseCode": "={{ $('Compute Area Snapshot').item.json.status }}"
+        }
+      },
+      "id": "9e144604-508d-455a-bfc7-d3e9b17c5f16",
+      "name": "Respond to Area (OK)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        896
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "c3de472c-eb63-4da6-afe6-b547a588b67a",
+      "name": "Respond to Area (Error)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        1104
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Location Ping Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Resolve Driver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Driver": {
+      "main": [
+        [
+          {
+            "node": "Validate + Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate + Store1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Location Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "DB Write Ping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETA Request Webhook (HTTP)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Webhook Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "Read Latest Ping (DB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Latest Ping (DB)": {
+      "main": [
+        [
+          {
+            "node": "Build ETA Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build ETA Request1": {
+      "main": [
+        [
+          {
+            "node": "Should Call Google?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Call Google?1": {
+      "main": [
+        [
+          {
+            "node": "Call Distance Matrix1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to ETA Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Distance Matrix1": {
+      "main": [
+        [
+          {
+            "node": "Parse ETA Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse ETA Response1": {
+      "main": [
+        [
+          {
+            "node": "DB Write ETA Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB Write ETA Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Merge Snapshot ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Snapshot ID": {
+      "main": [
+        [
+          {
+            "node": "Respond to ETA Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Area Snapshot Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read Latest Ping (area)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Latest Ping (area)": {
+      "main": [
+        [
+          {
+            "node": "Compute Area Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Area Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Snapshot OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Snapshot OK?": {
+      "main": [
+        [
+          {
+            "node": "DB Write Area Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Area (Error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB Write Area Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Respond to Area (OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "07bee82a-18e7-404e-aad6-a8a43b8bd104",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "instanceId": "85d1a5d1f5ca26d93b087dac52c74d1d3024942e1995be5b5ad6d546d13d5892"
+  },
+  "id": "r2UejmEOOD4SwQWW",
+  "tags": []
+}
