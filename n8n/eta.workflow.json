@@ -1,0 +1,326 @@
+{
+  "name": "eta (standalone dispatch/ETA module)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1200,
+        0
+      ],
+      "id": "eta00000-trig-0000-000000000001",
+      "name": "ETA Trigger",
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_ETA_BOT_CREDENTIAL",
+          "name": "eta bot"
+        }
+      },
+      "webhookId": "eta-standalone-webhook-0001"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "eta-exists-0001",
+              "leftValue": "={{ $json.message?.text || $json.callback_query?.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "eta-auth-0001",
+              "leftValue": "={{ [7865010991, 8302116388].includes($json.message?.from?.id || $json.callback_query?.from?.id) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -980,
+        0
+      ],
+      "id": "eta00000-gate-0000-000000000001",
+      "name": "ETA Gate"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message?.message_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query?.id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "callback"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -760,
+        0
+      ],
+      "id": "eta00000-switch-0000-00000000001",
+      "name": "ETA Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== ETA workflow Code node (standalone) ==================================\nconst SUPA_URL = $env.SUPABASE_URL;\nconst SUPA_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst DISPATCH_URL = $env.DISPATCH_ETA_URL;\nconst DISPATCH_SECRET = $env.DISPATCH_SECRET;\nconst httpRequest = this.helpers.httpRequest.bind(this.helpers);\nconst store = $getWorkflowStaticData('global');\nif (!store.quotes) { store.quotes = {}; }\n\n// ============================================================================\n// eta.js — shared, reusable ETA / dispatch module (pure logic, no network)\n// ----------------------------------------------------------------------------\n// Used by the standalone ETA workflow (n8n/eta.workflow.json) and designed to be\n// reused by the main concierge workflow later. Network I/O (the dispatch service\n// + reading concierge active jobs from Supabase) happens in the workflow's Code\n// node; this module only does parsing, payload assembly, and card rendering.\n//\n// The actual GPS/routing lives in the external dispatch service (NOT here):\n//   POST {address, auth[, driver]} ->\n//     { ok, eta_minutes, arrival_label, client_eta_minutes, client_arrival_label,\n//       distance_km, maps_url, location_stale, error }\n//\n// v1 stacked ETA is append-to-end only (no route optimization) and the cumulative\n// timing is a clearly-labeled estimate. See docs/ETA.md.\n// ============================================================================\n\nvar ETA_DRIVERS = ['T', 'FISTON'];\nvar ETA_PRODUCTS = ['c', '50c', 'p', '50p', 'b', '50k', 'k', 'm', 's'];\n\n// ---- input parsing ---------------------------------------------------------\n// Operator sends (Mode 1):\n//   eta\n//   maya\n//   2×p            (or \"2 p\", \"2x p\", \"2p\")\n//   4444 sherbrooke\n//   [10pm]         (optional)\nfunction etaParseInput(rawText) {\n  var lines = String(rawText || '').split('\\n').map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });\n  // drop a leading \"eta\" trigger word (line may be just \"eta\")\n  if (lines.length && lines[0].toLowerCase() === 'eta') { lines.shift(); }\n  else if (lines.length && lines[0].toLowerCase().indexOf('eta ') === 0) { lines[0] = lines[0].slice(4).trim(); }\n  if (lines.length < 3) {\n    return { ok: false, error: 'format:\\neta\\n<name>\\n<items>\\n<address>\\n[time]' };\n  }\n  var client = lines[0].toLowerCase();\n  var itemsParsed = etaParseItems(lines[1]);\n  var address = lines[2].toLowerCase();\n  var time = lines[3] || null;\n  if (itemsParsed.length === 0) { return { ok: false, error: 'no valid products in \"' + lines[1] + '\"\\nvalid: ' + ETA_PRODUCTS.join(', ') }; }\n  if (!address) { return { ok: false, error: 'missing address' }; }\n  return { ok: true, client: client, items_parsed: itemsParsed, items: etaItemsToStr(itemsParsed), address: address, time: time };\n}\n\nfunction etaParseItems(line) {\n  var s = String(line || '').toLowerCase().replace(/×/g, ' ').replace(/,/g, ' ').replace(/(\\d+)\\s*x\\s*/g, '$1 ').replace(/(\\d+)([a-z])/g, '$1 $2');\n  var toks = etaMergeHalf(s.split(/\\s+/).filter(Boolean));\n  var items = [], i = 0;\n  while (i < toks.length) {\n    var q = parseInt(toks[i], 10);\n    if (!isNaN(q) && toks[i + 1] && ETA_PRODUCTS.indexOf(toks[i + 1]) >= 0) { items.push({ product: toks[i + 1], qty: q }); i += 2; }\n    else if (ETA_PRODUCTS.indexOf(toks[i]) >= 0) { items.push({ product: toks[i], qty: 1 }); i += 1; }\n    else { i += 1; }\n  }\n  return items;\n}\nfunction etaMergeHalf(toks) {\n  var out = [];\n  for (var i = 0; i < toks.length; i++) {\n    if (toks[i] === '50' && (toks[i + 1] === 'p' || toks[i + 1] === 'c' || toks[i + 1] === 'k')) { out.push('50' + toks[i + 1]); i++; }\n    else { out.push(toks[i]); }\n  }\n  return out;\n}\nfunction etaItemsToStr(items) {\n  return items.map(function (it) { return it.qty + '×' + it.product; }).join(' ');\n}\n\n// ---- presentation helpers --------------------------------------------------\nfunction etaMapsUrl(addr) {\n  if (!addr) { return ''; }\n  var full = addr;\n  if (!/montreal|laval|brossard|quebec|qc/i.test(addr)) { full = addr + ', Montreal, QC, Canada'; }\n  return 'https://maps.google.com/?q=' + encodeURIComponent(full).replace(/%20/g, '+');\n}\nfunction etaSnippet(minutes, arrivalLabel) {\n  return 'on my way, ~' + minutes + ' min — arriving ' + arrivalLabel;\n}\n// format \"now + minutes\" as \"3:47 a.m.\" in the operator's timezone\nfunction etaArrivalLabel(minutes, nowMs) {\n  var d = new Date((nowMs || Date.now()) + minutes * 60000);\n  var s = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit', hour12: true }).format(d);\n  return s.replace(/\\bAM\\b/, 'a.m.').replace(/\\bPM\\b/, 'p.m.');\n}\n\n// ---- payload assembly ------------------------------------------------------\n// parsed   : from etaParseInput\n// driver   : 'T' | 'FISTON'\n// dispatch : the dispatch response for the NEW stop (or {failed:true,error})\n// queue    : [{client,address,minutes}] active jobs for this driver (sorted asc), may be []\nfunction etaBuildPayload(parsed, driver, dispatch, queue, nowMs) {\n  var ok = !!(dispatch && dispatch.ok);\n  var p = {\n    ok: ok, mode: (queue && queue.length > 0) ? 'stacked' : 'direct',\n    client: parsed.client, items: parsed.items, items_parsed: parsed.items_parsed,\n    address: parsed.address, driver: driver, maps_url: ok ? (dispatch.maps_url || etaMapsUrl(parsed.address)) : etaMapsUrl(parsed.address),\n    internal: ok ? { minutes: dispatch.eta_minutes, arrival_label: dispatch.arrival_label } : null,\n    client_eta: (ok && dispatch.client_eta_minutes !== undefined) ? { minutes: dispatch.client_eta_minutes, arrival_label: dispatch.client_arrival_label } : null,\n    snippet: null, queue: queue || [], stacked: null,\n    apply: { wired: false, order_draft: { client: parsed.client, items_parsed: parsed.items_parsed, address: parsed.address, driver: driver } },\n    dispatch_ok: ok, error: ok ? null : (dispatch && dispatch.error) || 'dispatch unavailable',\n    generated_at: Math.floor((nowMs || Date.now()) / 1000)\n  };\n  if (p.client_eta) { p.snippet = etaSnippet(p.client_eta.minutes, p.client_eta.arrival_label); }\n  else if (ok) { p.snippet = etaSnippet(p.internal.minutes, p.internal.arrival_label); }\n  if (ok && p.mode === 'stacked') {\n    var last = queue[queue.length - 1];\n    var added = p.internal.minutes;                 // v1 append-to-end proxy (direct ETA to new stop)\n    var total = (last.minutes || 0) + added;        // labeled approximate\n    p.stacked = { after: last.client, added_minutes: added, total_minutes: total,\n                  arrival_label: etaArrivalLabel(total, nowMs), approximate: true };\n  }\n  return p;\n}\n\n// ---- card rendering --------------------------------------------------------\nfunction etaRenderText(p) {\n  if (!p.ok) {\n    return 'QUICK ETA — failed\\nClient: ' + p.client + '\\nTo: ' + p.address + '\\nDriver: ' + p.driver + '\\n⚠ ' + p.error;\n  }\n  if (p.mode === 'stacked') { return etaRenderStacked(p); }\n  var L = ['QUICK ETA',\n    'Client: ' + p.client, 'Order: ' + p.items, 'To: ' + p.address, 'Driver: ' + p.driver,\n    'Internal: ' + p.internal.minutes + ' min · arriving ' + p.internal.arrival_label];\n  if (p.client_eta) { L.push('Client: ~' + p.client_eta.minutes + ' min · arriving ' + p.client_eta.arrival_label); }\n  L.push('Maps: ' + p.maps_url);\n  L.push('Client copy');\n  L.push(p.snippet);\n  return L.join('\\n');\n}\nfunction etaRenderStacked(p) {\n  var L = ['QUICK ETA · STACKED',\n    'Client: ' + p.client, 'Order: ' + p.items, 'Driver: ' + p.driver, 'New stop: ' + p.address,\n    'Current queue'];\n  if (!p.queue || p.queue.length === 0) {\n    L.push('none');\n    L.push('Direct arrival');\n    L.push('~' + p.internal.minutes + ' min');\n    L.push('ETA: ' + p.internal.arrival_label);\n    return L.join('\\n');\n  }\n  for (var i = 0; i < p.queue.length; i++) { L.push((i + 1) + '. ' + p.queue[i].client + ' · ' + p.queue[i].minutes + ' min'); }\n  L.push('If added after current jobs:');\n  L.push(p.client + ' · +~' + p.stacked.added_minutes + ' min after ' + p.stacked.after + '  (est)');\n  L.push('Arriving in ~' + p.stacked.total_minutes + ' min');\n  L.push('ETA: ' + p.stacked.arrival_label);\n  return L.join('\\n');\n}\n// inline-keyboard rows (driver choice + apply/cancel). qid keys the staged quote.\nfunction etaButtons(qid, driver) {\n  return [\n    [ { text: (driver === 'T' ? '🟢 T' : 'T'), callback_data: 'eta_drv:' + qid + ':T' },\n      { text: (driver === 'FISTON' ? '🟢 FISTON' : 'FISTON'), callback_data: 'eta_drv:' + qid + ':FISTON' } ],\n    [ { text: '✅ Apply as order', callback_data: 'eta_apply:' + qid },\n      { text: '❌ Cancel', callback_data: 'eta_cancel:' + qid } ]\n  ];\n}\n\n// dispatch ETA for one address (driver forwarded for future per-driver GPS)\nasync function dispatchETA(address, driver) {\n  if (!DISPATCH_URL) { return { ok: false, error: 'DISPATCH_ETA_URL not set' }; }\n  try {\n    var r = await httpRequest({ method: 'POST', url: DISPATCH_URL,\n      body: { address: address, auth: DISPATCH_SECRET, driver: driver }, json: true, timeout: 8000 });\n    return r || { ok: false, error: 'empty response' };\n  } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 90) }; }\n}\n// read-only: this driver's active jobs from concierge state_doc, each with a direct ETA\nasync function driverQueue(driver) {\n  if (!SUPA_URL || !SUPA_KEY) { return []; }\n  var orders = [];\n  try {\n    var res = await httpRequest({ method: 'GET',\n      url: String(SUPA_URL).replace(/\\/+$/, '') + '/rest/v1/state_doc?select=doc',\n      headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Accept-Profile': 'concierge' },\n      json: true, timeout: 8000 });\n    var rows = Array.isArray(res) ? res : [];\n    orders = (rows.length && rows[0].doc && rows[0].doc.orders) ? rows[0].doc.orders : [];\n  } catch (e) { return []; }\n  var out = [];\n  for (var i = 0; i < orders.length && out.length < 6; i++) {\n    if ((orders[i].driver || '') !== driver) { continue; }\n    var d = await dispatchETA(orders[i].address, driver);\n    if (d && d.ok && typeof d.eta_minutes === 'number') {\n      out.push({ client: orders[i].name, address: orders[i].address, minutes: d.eta_minutes });\n    }\n  }\n  return out.sort(function (a, b) { return a.minutes - b.minutes; });\n}\nasync function quote(parsed, driver) {\n  var disp = await dispatchETA(parsed.address, driver);\n  var queue = disp.ok ? await driverQueue(driver) : [];\n  return etaBuildPayload(parsed, driver, disp, queue, Date.now());\n}\n\n// --- message path: produce a quote card -------------------------------------\nvar msg = $json.message;\nvar chatId = msg.chat.id;\nvar rawText = msg.text || '';\nvar parsed = etaParseInput(rawText);\nif (!parsed.ok) {\n  return [{ json: { chat_id: chatId, text: parsed.error, telegram_body: { chat_id: chatId, text: parsed.error } } }];\n}\nvar driver = 'T';\nvar payload = await quote(parsed, driver);\nvar qid = 'q' + Date.now() + Math.floor(Math.random() * 1000);\nstore.quotes[qid] = { parsed: parsed, driver: driver, ts: Math.floor(Date.now() / 1000) };\nvar text = etaRenderText(payload);\nreturn [{ json: {\n  chat_id: chatId, text: text,\n  telegram_body: { chat_id: chatId, text: text, reply_markup: { inline_keyboard: etaButtons(qid, driver) } }\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        -120
+      ],
+      "id": "eta00000-quote-0000-000000000001",
+      "name": "ETA Quote"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.ETA_BOT_TOKEN }}/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.telegram_body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -300,
+        -120
+      ],
+      "id": "eta00000-send-0000-000000000001",
+      "name": "ETA Send Card"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== ETA workflow Code node (standalone) ==================================\nconst SUPA_URL = $env.SUPABASE_URL;\nconst SUPA_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\nconst DISPATCH_URL = $env.DISPATCH_ETA_URL;\nconst DISPATCH_SECRET = $env.DISPATCH_SECRET;\nconst httpRequest = this.helpers.httpRequest.bind(this.helpers);\nconst store = $getWorkflowStaticData('global');\nif (!store.quotes) { store.quotes = {}; }\n\n// ============================================================================\n// eta.js — shared, reusable ETA / dispatch module (pure logic, no network)\n// ----------------------------------------------------------------------------\n// Used by the standalone ETA workflow (n8n/eta.workflow.json) and designed to be\n// reused by the main concierge workflow later. Network I/O (the dispatch service\n// + reading concierge active jobs from Supabase) happens in the workflow's Code\n// node; this module only does parsing, payload assembly, and card rendering.\n//\n// The actual GPS/routing lives in the external dispatch service (NOT here):\n//   POST {address, auth[, driver]} ->\n//     { ok, eta_minutes, arrival_label, client_eta_minutes, client_arrival_label,\n//       distance_km, maps_url, location_stale, error }\n//\n// v1 stacked ETA is append-to-end only (no route optimization) and the cumulative\n// timing is a clearly-labeled estimate. See docs/ETA.md.\n// ============================================================================\n\nvar ETA_DRIVERS = ['T', 'FISTON'];\nvar ETA_PRODUCTS = ['c', '50c', 'p', '50p', 'b', '50k', 'k', 'm', 's'];\n\n// ---- input parsing ---------------------------------------------------------\n// Operator sends (Mode 1):\n//   eta\n//   maya\n//   2×p            (or \"2 p\", \"2x p\", \"2p\")\n//   4444 sherbrooke\n//   [10pm]         (optional)\nfunction etaParseInput(rawText) {\n  var lines = String(rawText || '').split('\\n').map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });\n  // drop a leading \"eta\" trigger word (line may be just \"eta\")\n  if (lines.length && lines[0].toLowerCase() === 'eta') { lines.shift(); }\n  else if (lines.length && lines[0].toLowerCase().indexOf('eta ') === 0) { lines[0] = lines[0].slice(4).trim(); }\n  if (lines.length < 3) {\n    return { ok: false, error: 'format:\\neta\\n<name>\\n<items>\\n<address>\\n[time]' };\n  }\n  var client = lines[0].toLowerCase();\n  var itemsParsed = etaParseItems(lines[1]);\n  var address = lines[2].toLowerCase();\n  var time = lines[3] || null;\n  if (itemsParsed.length === 0) { return { ok: false, error: 'no valid products in \"' + lines[1] + '\"\\nvalid: ' + ETA_PRODUCTS.join(', ') }; }\n  if (!address) { return { ok: false, error: 'missing address' }; }\n  return { ok: true, client: client, items_parsed: itemsParsed, items: etaItemsToStr(itemsParsed), address: address, time: time };\n}\n\nfunction etaParseItems(line) {\n  var s = String(line || '').toLowerCase().replace(/×/g, ' ').replace(/,/g, ' ').replace(/(\\d+)\\s*x\\s*/g, '$1 ').replace(/(\\d+)([a-z])/g, '$1 $2');\n  var toks = etaMergeHalf(s.split(/\\s+/).filter(Boolean));\n  var items = [], i = 0;\n  while (i < toks.length) {\n    var q = parseInt(toks[i], 10);\n    if (!isNaN(q) && toks[i + 1] && ETA_PRODUCTS.indexOf(toks[i + 1]) >= 0) { items.push({ product: toks[i + 1], qty: q }); i += 2; }\n    else if (ETA_PRODUCTS.indexOf(toks[i]) >= 0) { items.push({ product: toks[i], qty: 1 }); i += 1; }\n    else { i += 1; }\n  }\n  return items;\n}\nfunction etaMergeHalf(toks) {\n  var out = [];\n  for (var i = 0; i < toks.length; i++) {\n    if (toks[i] === '50' && (toks[i + 1] === 'p' || toks[i + 1] === 'c' || toks[i + 1] === 'k')) { out.push('50' + toks[i + 1]); i++; }\n    else { out.push(toks[i]); }\n  }\n  return out;\n}\nfunction etaItemsToStr(items) {\n  return items.map(function (it) { return it.qty + '×' + it.product; }).join(' ');\n}\n\n// ---- presentation helpers --------------------------------------------------\nfunction etaMapsUrl(addr) {\n  if (!addr) { return ''; }\n  var full = addr;\n  if (!/montreal|laval|brossard|quebec|qc/i.test(addr)) { full = addr + ', Montreal, QC, Canada'; }\n  return 'https://maps.google.com/?q=' + encodeURIComponent(full).replace(/%20/g, '+');\n}\nfunction etaSnippet(minutes, arrivalLabel) {\n  return 'on my way, ~' + minutes + ' min — arriving ' + arrivalLabel;\n}\n// format \"now + minutes\" as \"3:47 a.m.\" in the operator's timezone\nfunction etaArrivalLabel(minutes, nowMs) {\n  var d = new Date((nowMs || Date.now()) + minutes * 60000);\n  var s = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit', hour12: true }).format(d);\n  return s.replace(/\\bAM\\b/, 'a.m.').replace(/\\bPM\\b/, 'p.m.');\n}\n\n// ---- payload assembly ------------------------------------------------------\n// parsed   : from etaParseInput\n// driver   : 'T' | 'FISTON'\n// dispatch : the dispatch response for the NEW stop (or {failed:true,error})\n// queue    : [{client,address,minutes}] active jobs for this driver (sorted asc), may be []\nfunction etaBuildPayload(parsed, driver, dispatch, queue, nowMs) {\n  var ok = !!(dispatch && dispatch.ok);\n  var p = {\n    ok: ok, mode: (queue && queue.length > 0) ? 'stacked' : 'direct',\n    client: parsed.client, items: parsed.items, items_parsed: parsed.items_parsed,\n    address: parsed.address, driver: driver, maps_url: ok ? (dispatch.maps_url || etaMapsUrl(parsed.address)) : etaMapsUrl(parsed.address),\n    internal: ok ? { minutes: dispatch.eta_minutes, arrival_label: dispatch.arrival_label } : null,\n    client_eta: (ok && dispatch.client_eta_minutes !== undefined) ? { minutes: dispatch.client_eta_minutes, arrival_label: dispatch.client_arrival_label } : null,\n    snippet: null, queue: queue || [], stacked: null,\n    apply: { wired: false, order_draft: { client: parsed.client, items_parsed: parsed.items_parsed, address: parsed.address, driver: driver } },\n    dispatch_ok: ok, error: ok ? null : (dispatch && dispatch.error) || 'dispatch unavailable',\n    generated_at: Math.floor((nowMs || Date.now()) / 1000)\n  };\n  if (p.client_eta) { p.snippet = etaSnippet(p.client_eta.minutes, p.client_eta.arrival_label); }\n  else if (ok) { p.snippet = etaSnippet(p.internal.minutes, p.internal.arrival_label); }\n  if (ok && p.mode === 'stacked') {\n    var last = queue[queue.length - 1];\n    var added = p.internal.minutes;                 // v1 append-to-end proxy (direct ETA to new stop)\n    var total = (last.minutes || 0) + added;        // labeled approximate\n    p.stacked = { after: last.client, added_minutes: added, total_minutes: total,\n                  arrival_label: etaArrivalLabel(total, nowMs), approximate: true };\n  }\n  return p;\n}\n\n// ---- card rendering --------------------------------------------------------\nfunction etaRenderText(p) {\n  if (!p.ok) {\n    return 'QUICK ETA — failed\\nClient: ' + p.client + '\\nTo: ' + p.address + '\\nDriver: ' + p.driver + '\\n⚠ ' + p.error;\n  }\n  if (p.mode === 'stacked') { return etaRenderStacked(p); }\n  var L = ['QUICK ETA',\n    'Client: ' + p.client, 'Order: ' + p.items, 'To: ' + p.address, 'Driver: ' + p.driver,\n    'Internal: ' + p.internal.minutes + ' min · arriving ' + p.internal.arrival_label];\n  if (p.client_eta) { L.push('Client: ~' + p.client_eta.minutes + ' min · arriving ' + p.client_eta.arrival_label); }\n  L.push('Maps: ' + p.maps_url);\n  L.push('Client copy');\n  L.push(p.snippet);\n  return L.join('\\n');\n}\nfunction etaRenderStacked(p) {\n  var L = ['QUICK ETA · STACKED',\n    'Client: ' + p.client, 'Order: ' + p.items, 'Driver: ' + p.driver, 'New stop: ' + p.address,\n    'Current queue'];\n  if (!p.queue || p.queue.length === 0) {\n    L.push('none');\n    L.push('Direct arrival');\n    L.push('~' + p.internal.minutes + ' min');\n    L.push('ETA: ' + p.internal.arrival_label);\n    return L.join('\\n');\n  }\n  for (var i = 0; i < p.queue.length; i++) { L.push((i + 1) + '. ' + p.queue[i].client + ' · ' + p.queue[i].minutes + ' min'); }\n  L.push('If added after current jobs:');\n  L.push(p.client + ' · +~' + p.stacked.added_minutes + ' min after ' + p.stacked.after + '  (est)');\n  L.push('Arriving in ~' + p.stacked.total_minutes + ' min');\n  L.push('ETA: ' + p.stacked.arrival_label);\n  return L.join('\\n');\n}\n// inline-keyboard rows (driver choice + apply/cancel). qid keys the staged quote.\nfunction etaButtons(qid, driver) {\n  return [\n    [ { text: (driver === 'T' ? '🟢 T' : 'T'), callback_data: 'eta_drv:' + qid + ':T' },\n      { text: (driver === 'FISTON' ? '🟢 FISTON' : 'FISTON'), callback_data: 'eta_drv:' + qid + ':FISTON' } ],\n    [ { text: '✅ Apply as order', callback_data: 'eta_apply:' + qid },\n      { text: '❌ Cancel', callback_data: 'eta_cancel:' + qid } ]\n  ];\n}\n\n// dispatch ETA for one address (driver forwarded for future per-driver GPS)\nasync function dispatchETA(address, driver) {\n  if (!DISPATCH_URL) { return { ok: false, error: 'DISPATCH_ETA_URL not set' }; }\n  try {\n    var r = await httpRequest({ method: 'POST', url: DISPATCH_URL,\n      body: { address: address, auth: DISPATCH_SECRET, driver: driver }, json: true, timeout: 8000 });\n    return r || { ok: false, error: 'empty response' };\n  } catch (e) { return { ok: false, error: String((e && e.message) || e).slice(0, 90) }; }\n}\n// read-only: this driver's active jobs from concierge state_doc, each with a direct ETA\nasync function driverQueue(driver) {\n  if (!SUPA_URL || !SUPA_KEY) { return []; }\n  var orders = [];\n  try {\n    var res = await httpRequest({ method: 'GET',\n      url: String(SUPA_URL).replace(/\\/+$/, '') + '/rest/v1/state_doc?select=doc',\n      headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Accept-Profile': 'concierge' },\n      json: true, timeout: 8000 });\n    var rows = Array.isArray(res) ? res : [];\n    orders = (rows.length && rows[0].doc && rows[0].doc.orders) ? rows[0].doc.orders : [];\n  } catch (e) { return []; }\n  var out = [];\n  for (var i = 0; i < orders.length && out.length < 6; i++) {\n    if ((orders[i].driver || '') !== driver) { continue; }\n    var d = await dispatchETA(orders[i].address, driver);\n    if (d && d.ok && typeof d.eta_minutes === 'number') {\n      out.push({ client: orders[i].name, address: orders[i].address, minutes: d.eta_minutes });\n    }\n  }\n  return out.sort(function (a, b) { return a.minutes - b.minutes; });\n}\nasync function quote(parsed, driver) {\n  var disp = await dispatchETA(parsed.address, driver);\n  var queue = disp.ok ? await driverQueue(driver) : [];\n  return etaBuildPayload(parsed, driver, disp, queue, Date.now());\n}\n\n// --- callback path: driver switch / apply (no-op) / cancel ------------------\nvar cb = $json.callback_query;\nvar chatId = cb.message.chat.id;\nvar msgId = cb.message.message_id;\nvar cbId = cb.id;\nvar parts = (cb.data || '').split(':');\nvar action = parts[0], qid = parts[1];\nvar q = store.quotes[qid];\nvar editText = '', editMarkup = null, answerText = '';\nif (!q) {\n  editText = 'ETA quote expired — send `eta` again.';\n} else if (action === 'eta_drv') {\n  var drv = parts[2] === 'FISTON' ? 'FISTON' : 'T';\n  q.driver = drv;\n  var pl = await quote(q.parsed, drv);\n  editText = etaRenderText(pl);\n  editMarkup = { inline_keyboard: etaButtons(qid, drv) };\n  answerText = 'driver: ' + drv;\n} else if (action === 'eta_apply') {\n  var pl2 = await quote(q.parsed, q.driver);\n  editText = etaRenderText(pl2) + '\\n\\n⚠ Apply as order is NOT wired yet (no-op).\\norder_draft kept for the main workflow: '\n    + JSON.stringify(pl2.apply.order_draft);\n  answerText = 'apply not wired yet';\n  delete store.quotes[qid];\n} else if (action === 'eta_cancel') {\n  editText = 'ETA quote cancelled.';\n  delete store.quotes[qid];\n}\nreturn [{ json: { chat_id: chatId, message_id: msgId, callback_query_id: cbId,\n  edit_text: editText, edit_markup: editMarkup, answer_text: answerText } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        140
+      ],
+      "id": "eta00000-cback-0000-000000000001",
+      "name": "ETA Callback"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.ETA_BOT_TOKEN }}/editMessageText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify(Object.assign({ chat_id: $json.chat_id, message_id: $json.message_id, text: $json.edit_text }, $json.edit_markup ? { reply_markup: $json.edit_markup } : {})) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -300,
+        140
+      ],
+      "id": "eta00000-edit-0000-000000000001",
+      "name": "ETA Edit Card"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.ETA_BOT_TOKEN }}/answerCallbackQuery",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ callback_query_id: $json.callback_query_id, text: $json.answer_text || '' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        140
+      ],
+      "id": "eta00000-ans-0000-0000000000001",
+      "name": "ETA Answer Callback"
+    }
+  ],
+  "connections": {
+    "ETA Trigger": {
+      "main": [
+        [
+          {
+            "node": "ETA Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETA Gate": {
+      "main": [
+        [
+          {
+            "node": "ETA Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETA Switch": {
+      "main": [
+        [
+          {
+            "node": "ETA Quote",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ETA Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETA Quote": {
+      "main": [
+        [
+          {
+            "node": "ETA Send Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETA Callback": {
+      "main": [
+        [
+          {
+            "node": "ETA Edit Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETA Edit Card": {
+      "main": [
+        [
+          {
+            "node": "ETA Answer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "tags": []
+}
