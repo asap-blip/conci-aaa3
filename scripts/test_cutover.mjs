@@ -107,6 +107,7 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
 
   // 7. callback approve -> commit + inventory/cash/pay + audit
   const cashBefore = store.doc.wallet.cash, payBefore = store.doc.wallet.pay;
+  await run(CALLBACK, cbq('setdrv:' + tok + ':T', 4321)); // driver now required before approve
   r = await run(CALLBACK, cbq('approve:' + tok, 4321));
   check('approve commits order', store.doc.orders.some((o) => o.id === tok), store.doc.orders.map(o=>o.id));
   check('approve adds price to cash', store.doc.wallet.cash === cashBefore + 65, store.doc.wallet.cash);
@@ -126,6 +127,7 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
   check('freeform parsed -> pending in Supabase', !!ffTok && !!store.doc.pending[ffTok], Object.keys(store.doc.pending));
   check('freeform pending audited', store.events.some((e) => e.action === 'order_pending'));
   const ffCashBefore = store.doc.wallet.cash;
+  await run(CALLBACK, cbq('setdrv:' + ffTok + ':T', 9001)); // driver required before approve
   await run(CALLBACK, cbq('approve:' + ffTok, 9001));
   check('freeform order approvable end-to-end', store.doc.orders.some((o) => o.id === ffTok), store.doc.orders.map(o=>o.id));
   check('freeform approve adds cash', store.doc.wallet.cash === ffCashBefore + 80, store.doc.wallet.cash);
@@ -158,6 +160,23 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
   await run(CALLBACK, cbq('discard_action:' + fTok2, 7002));
   check('cancel removes pending purge', !store.doc.pending_actions[fTok2]);
   check('cancel leaves front data intact', store.doc.front.jay && store.doc.front.jay.total === 40, store.doc.front);
+
+  // 11. DRIVER selection (select-only -> approve persists; require before approve)
+  const dord = await run(ROUTER, msg('lola\norder: 1 c\naddress: 1 rue test\nprice: 30'));
+  const dtok = dord[0].json.token;
+  check('pending card has driver buttons', JSON.stringify(dord[0].json.telegram_body.reply_markup).includes('setdrv:' + dtok + ':T'));
+  check('pending card shows Driver: —', /Driver: —/.test(dord[0].json.text), dord[0].json.text);
+  const r2 = await run(CALLBACK, cbq('approve:' + dtok, 8100));
+  check('approve blocked without driver', !!store.doc.pending[dtok] && !store.doc.orders.some((o) => o.id === dtok));
+  check('block re-render warns', /pick a driver first/.test(r2[0].json.edit_markup_text || ''));
+  const r3 = await run(CALLBACK, cbq('setdrv:' + dtok + ':FISTON', 8100));
+  check('setdrv sets pending driver', store.doc.pending[dtok] && store.doc.pending[dtok].driver === 'FISTON');
+  check('setdrv re-renders in place', /Driver: FISTON/.test(r3[0].json.edit_markup_text || '') && JSON.stringify(r3[0].json.edit_markup).includes('approve:' + dtok));
+  check('setdrv did NOT approve', !store.doc.orders.some((o) => o.id === dtok));
+  await run(CALLBACK, cbq('approve:' + dtok, 8100));
+  const dcommit = store.doc.orders.find((o) => o.id === dtok);
+  check('approved order persists driver', !!dcommit && dcommit.driver === 'FISTON', dcommit);
+  check('driver shows in jobs', /FISTON/.test(await run(ROUTER, msg('jobs')).then((r) => r[0].json.text)));
 
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

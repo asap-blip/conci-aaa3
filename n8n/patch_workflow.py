@@ -391,6 +391,7 @@ _NEW_CMD_FRONT = r"""function cmd_front() {
     var dts = ord ? (ord.approved_at || ord.entered_at || fe.ts) : fe.ts;
     var seg = [nm, '$' + fe.amount, fe.id, montrealMonDay(dts)];
     if (ord && ord.items && ord.items.length) { seg.push(itemsToStr(ord.items)); }
+    if (ord && ord.driver) { seg.push(ord.driver); }
     lines.push(seg.join('  ·  '));
     grand = grand + fe.amount;
   }
@@ -423,6 +424,7 @@ _NEW_CMD_FRONTNAME = r"""function cmd_frontName(arg) {
     var seg = ['$' + fe.amount, fe.id, montrealMonDay(dts)];
     if (ord && ord.items && ord.items.length) { seg.push(itemsToStr(ord.items)); }
     if (ord && ord.address) { seg.push(ord.address); }
+    if (ord && ord.driver) { seg.push(ord.driver); }
     lines.push(seg.join('  ·  '));
     grand = grand + fe.amount;
   }
@@ -467,6 +469,67 @@ function cmd_purgeFront() { return stagePurge('front'); }
 var exactCommands = {""",
 "purge-handlers")
 
+# --- driver selection: shared pending-card builder (plain text) --------------
+code = replace_once(code,
+"function send(textOut) {",
+r"""var DRIVERS = ['T', 'FISTON'];
+function driverBtn(token, label, sel) {
+  return { text: (sel === label ? '🟢 ' + label : label), callback_data: 'setdrv:' + token + ':' + label };
+}
+function pendingMarkup(token, driver) {
+  return { inline_keyboard: [
+    [ driverBtn(token, 'T', driver), driverBtn(token, 'FISTON', driver) ],
+    [ { text: '✅', callback_data: 'approve:' + token },
+      { text: '🟧', callback_data: 'front_prompt:' + token },
+      { text: '❌', callback_data: 'cancel:' + token } ]
+  ] };
+}
+function pendingText(o) {
+  var token = o.token || o.id;
+  var L = [];
+  L.push(token);
+  L.push(o.name + '  ' + (o.price === null || o.price === undefined ? '[no price]' : '$' + o.price));
+  L.push(itemsToStr(o.items));
+  L.push((o.time || '[no time]') + '  ' + o.address);
+  L.push('🗺 Maps: ' + mapsUrlPlain(o.address));
+  L.push('Driver: ' + (o.driver || '—'));
+  return L.join('\n');
+}
+function emitPending(o) {
+  var token = o.token || o.id;
+  var t = pendingText(o);
+  return [{ json: {
+    chat_id: chatId, text: t, is_callback: false, has_card: true, needs_parsing: false, token: token,
+    telegram_body: { chat_id: chatId, text: t, reply_markup: pendingMarkup(token, o.driver || null) }
+  } }];
+}
+function send(textOut) {""",
+"driver-pending-builder")
+
+# form-parser pending card -> use the shared builder (adds driver row + line)
+_fcs = code.index('var formItemStr = itemsToStr(formItems);')
+_fce = code.index('} }];', _fcs) + len('} }];')
+assert 'formCardLines' in code[_fcs:_fce] and 'reply_markup' in code[_fcs:_fce], 'form card anchor drift'
+code = code[:_fcs] + "formPending.driver = null;\n  return emitPending(formPending);" + code[_fce:]
+
+# cmd_jobs: show driver on each job line
+code = replace_once(code,
+"htmlEsc(o.address) + ' ' + mapsLink(o.address) + htmlEsc(fTag));",
+"htmlEsc(o.address) + ' ' + mapsLink(o.address) + ' · ' + htmlEsc(o.driver || '\\u2014') + htmlEsc(fTag));",
+"jobs-driver")
+
+# cmd_summary: show driver on each order line
+code = replace_once(code,
+"' · ' + itemsToStr(oo.items) + ' · ' + oo.address + fTag2",
+"' · ' + itemsToStr(oo.items) + ' · ' + oo.address + ' · ' + (oo.driver || '\\u2014') + fTag2",
+"summary-driver")
+
+# cmd_void confirm card: show driver
+code = replace_once(code,
+"  lines.push(itemsToStr(voidOrd.items) + '  ·  ' + (voidOrd.time || '[no time]'));",
+"  lines.push(itemsToStr(voidOrd.items) + '  ·  ' + (voidOrd.time || '[no time]'));\n  lines.push('Driver: ' + (voidOrd.driver || '—'));",
+"void-driver")
+
 # write code back
 nodes['Code']['parameters']['jsCode'] = code
 
@@ -482,6 +545,37 @@ _pr = _pr.replace(
 "finalCardLines.push(timeStrFinal + '  ' + pending.address);\nfinalCardLines.push('\\ud83d\\uddfa Maps: ' + mapsUrlPlain(pending.address));",
 1)
 assert _pr.count('mapsUrlPlain') == 2, "parse response maps anchors"
+
+# driver selection: rebuild the Claude-path pending card with driver row + line
+_NEW_PR_FINAL = r"""var finalCardLines = [];
+if (isEdit) { finalCardLines.push('updated ' + token); } else { finalCardLines.push(token); }
+finalCardLines.push(pending.name + '  ' + priceStrFinal);
+finalCardLines.push(itemStrFinal);
+finalCardLines.push(timeStrFinal + '  ' + pending.address);
+finalCardLines.push('🗺 Maps: ' + mapsUrlPlain(pending.address));
+finalCardLines.push('Driver: ' + (pending.driver || '—'));
+var finalCardText = finalCardLines.join('\n');
+return [{ json: {
+  chat_id: chatId, text: finalCardText, is_callback: false, has_card: true, token: token,
+  telegram_body: { chat_id: chatId, text: finalCardText, reply_markup: { inline_keyboard: [
+    [ { text: (pending.driver === 'T' ? '🟢 T' : 'T'), callback_data: 'setdrv:' + token + ':T' },
+      { text: (pending.driver === 'FISTON' ? '🟢 FISTON' : 'FISTON'), callback_data: 'setdrv:' + token + ':FISTON' } ],
+    [ { text: '✅', callback_data: 'approve:' + token },
+      { text: '🟧', callback_data: 'front_prompt:' + token },
+      { text: '❌', callback_data: 'cancel:' + token } ]
+  ] } }
+} }];"""
+_ps = _pr.index('var finalCardLines = [];')
+_pe = _pr.index('}];', _ps) + len('}];')
+assert "approve:' + token" in _pr[_ps:_pe] and 'finalCardText' in _pr[_ps:_pe], 'PR final-card anchor drift'
+_pr = _pr[:_ps] + _NEW_PR_FINAL + _pr[_pe:]
+
+# driver on the edit-diff (approved-order edit) card
+_pr = _pr.replace(
+"  var cardText = cardLines.join('\\n');",
+"  cardLines.push('Driver: ' + (after.driver || '—'));\n  var cardText = cardLines.join('\\n');",
+1)
+
 nodes['Parse Response']['parameters']['jsCode'] = _pr
 
 # --- 9. Callback handler: handle new_order:freeform|form --------------------
@@ -568,6 +662,111 @@ cb = replace_once(cb,
 "    confirm_card_text: confirmCardText,        // purge: drives Has Confirm Card? / Send Confirm Card HTTP\n"
 "    confirm_card_markup: confirmCardMarkup",
 "cb-purge-return")
+
+# === driver selection (callback side) ========================================
+# vars for the in-place edit-with-buttons path
+cb = replace_once(cb,
+"var confirmCardMarkup = null;  // purge: inline buttons for the Step-2 card",
+"var confirmCardMarkup = null;  // purge: inline buttons for the Step-2 card\n"
+"var editMarkupText = null;     // driver: re-render the pending card text in place\n"
+"var editMarkup = null;         // driver: re-render the pending card buttons in place",
+"cb-driver-vars")
+
+# driver helpers (callback copies; items rendered with × to match intake cards)
+cb = replace_once(cb,
+"function priceLabel2(v) {",
+r"""function mapsUrlPlain2(addr) { if (!addr) { return ''; } var full = addr; if (!/montreal|laval|brossard|quebec|qc/i.test(addr)) { full = addr + ', Montreal, QC, Canada'; } return 'https://maps.google.com/?q=' + encodeURIComponent(full); }
+function driverBtn2(token, label, sel) { return { text: (sel === label ? '🟢 ' + label : label), callback_data: 'setdrv:' + token + ':' + label }; }
+function pendingMarkup2(token, driver) { return { inline_keyboard: [
+  [ driverBtn2(token, 'T', driver), driverBtn2(token, 'FISTON', driver) ],
+  [ { text: '✅', callback_data: 'approve:' + token }, { text: '🟧', callback_data: 'front_prompt:' + token }, { text: '❌', callback_data: 'cancel:' + token } ]
+] }; }
+function pendingText2(o) {
+  var token = o.token || o.id;
+  var its = ''; var z; for (z = 0; z < o.items.length; z++) { if (z > 0) { its += ' '; } its += o.items[z].qty + '×' + o.items[z].product; }
+  var L = [token, o.name + '  ' + ((o.price === null || o.price === undefined) ? '[no price]' : '$' + o.price), its,
+    (o.time || '[no time]') + '  ' + o.address, '🗺 Maps: ' + mapsUrlPlain2(o.address), 'Driver: ' + (o.driver || '—')];
+  return L.join('\n');
+}
+function priceLabel2(v) {""",
+"cb-driver-helpers")
+
+# setdrv: select driver only, re-render the card in place (no approval)
+cb = replace_once(cb,
+"} else if (action === 'discard_action') {",
+r"""} else if (action === 'setdrv') {
+  var drvSel = parts[2];
+  if (!data.pending[token]) {
+    responseText = 'Order ' + token + ' not found or already handled.';
+    auditAction = 'callback_stale';
+  } else if (drvSel !== 'T' && drvSel !== 'FISTON') {
+    auditAction = 'driver_invalid';
+  } else {
+    data.pending[token].driver = drvSel;
+    editMarkupText = pendingText2(data.pending[token]);
+    editMarkup = pendingMarkup2(token, drvSel);
+    auditAction = 'driver_selected';
+  }
+} else if (action === 'discard_action') {""",
+"cb-setdrv")
+
+# approve: require a driver, then persist it on the order
+cb = replace_once(cb,
+r"""  } else {
+    var order = {
+      id: token, name: pending.name, items: pending.items, price: pending.price,
+      time: pending.time, address: pending.address,
+      entered_by: pending.entered_by, entered_at: pending.entered_at,
+      approved_by: userId, approved_at: nowTs, status: 'open',
+      front_amount: 0
+    };""",
+r"""  } else if (!pending.driver) {
+    editMarkupText = pendingText2(pending) + '\n⚠ pick a driver first';
+    editMarkup = pendingMarkup2(token, pending.driver);
+    auditAction = 'approve_blocked_no_driver';
+  } else {
+    var order = {
+      id: token, name: pending.name, items: pending.items, price: pending.price,
+      time: pending.time, address: pending.address,
+      entered_by: pending.entered_by, entered_at: pending.entered_at,
+      approved_by: userId, approved_at: nowTs, status: 'open',
+      front_amount: 0, driver: pending.driver
+    };""",
+"cb-approve-driver")
+
+# front_prompt (🟧): require a driver, then persist it on the order
+cb = replace_once(cb,
+r"""  } else {
+    var pp = data.pending[token];
+    var orderF = {
+      id: token, name: pp.name, items: pp.items, price: pp.price,
+      time: pp.time, address: pp.address,
+      entered_by: pp.entered_by, entered_at: pp.entered_at,
+      approved_by: userId, approved_at: nowTs, status: 'open',
+      front_amount: 0
+    };""",
+r"""  } else if (!data.pending[token].driver) {
+    editMarkupText = pendingText2(data.pending[token]) + '\n⚠ pick a driver first';
+    editMarkup = pendingMarkup2(token, data.pending[token].driver);
+    auditAction = 'front_blocked_no_driver';
+  } else {
+    var pp = data.pending[token];
+    var orderF = {
+      id: token, name: pp.name, items: pp.items, price: pp.price,
+      time: pp.time, address: pp.address,
+      entered_by: pp.entered_by, entered_at: pp.entered_at,
+      approved_by: userId, approved_at: nowTs, status: 'open',
+      front_amount: 0, driver: pp.driver
+    };""",
+"cb-front-driver")
+
+# expose the in-place edit fields on the callback output
+cb = replace_once(cb,
+"    confirm_card_markup: confirmCardMarkup",
+"    confirm_card_markup: confirmCardMarkup,\n"
+"    edit_markup_text: editMarkupText,   // driver: drives Has Edit Markup? / Edit Card With Buttons HTTP\n"
+"    edit_markup: editMarkup",
+"cb-driver-return")
 
 nodes['Callback Handler']['parameters']['jsCode'] = cb
 
@@ -656,6 +855,52 @@ _ac = d['connections']['Telegram Answer Callback']['main'][0]
 assert not any(c['node'] == 'Has Confirm Card?' for c in _ac), "answer-callback wiring already present"
 _ac.append({"node": "Has Confirm Card?", "type": "main", "index": 0})
 d['connections']['Has Confirm Card?'] = {"main": [[{"node": "Send Confirm Card HTTP", "type": "main", "index": 0}]]}
+
+# --- driver: two isolated nodes for in-place edit-with-buttons (callback side) -
+# Fire only when Callback Handler sets edit_markup_text (setdrv / driver-required
+# re-render). No existing node/flow is modified.
+assert not any(n['name'] in ('Has Edit Markup?', 'Edit Card With Buttons HTTP') for n in d['nodes']), "driver nodes already present"
+d['nodes'].append({
+  "parameters": {
+    "conditions": {
+      "options": {"caseSensitive": True, "leftValue": "", "typeValidation": "strict", "version": 3},
+      "conditions": [{
+        "id": "ed1tmrkp-card-cond-000000000001",
+        "leftValue": "={{ $('Callback Handler').item.json.edit_markup_text }}",
+        "rightValue": "",
+        "operator": {"type": "string", "operation": "exists", "singleValue": True}
+      }],
+      "combinator": "and"
+    },
+    "options": {}
+  },
+  "type": "n8n-nodes-base.if",
+  "typeVersion": 2.3,
+  "position": [-4144, 6320],
+  "id": "22222222-drv-editmk-0000-000000000001",
+  "name": "Has Edit Markup?"
+})
+d['nodes'].append({
+  "parameters": {
+    "method": "POST",
+    "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/editMessageText",
+    "sendHeaders": True,
+    "headerParameters": {"parameters": [{"name": "content-type", "value": "application/json"}]},
+    "sendBody": True,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ chat_id: $('Callback Handler').item.json.chat_id, message_id: $('Callback Handler').item.json.message_id, text: $('Callback Handler').item.json.edit_markup_text, reply_markup: $('Callback Handler').item.json.edit_markup }) }}",
+    "options": {}
+  },
+  "type": "n8n-nodes-base.httpRequest",
+  "typeVersion": 4.4,
+  "position": [-3904, 6320],
+  "id": "22222222-drv-editmk-0000-000000000002",
+  "name": "Edit Card With Buttons HTTP"
+})
+# wire: Telegram Answer Callback -> Has Edit Markup? -> Edit Card With Buttons HTTP
+assert not any(c['node'] == 'Has Edit Markup?' for c in _ac), "answer-callback edit wiring already present"
+_ac.append({"node": "Has Edit Markup?", "type": "main", "index": 0})
+d['connections']['Has Edit Markup?'] = {"main": [[{"node": "Edit Card With Buttons HTTP", "type": "main", "index": 0}]]}
 
 # bump workflow name so it's distinguishable on import
 d['name'] = 'concierge (hardened operator UX)'
