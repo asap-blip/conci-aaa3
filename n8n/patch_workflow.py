@@ -389,10 +389,9 @@ _NEW_CMD_FRONT = r"""function cmd_front() {
     if (!ord && data.pending && data.pending[fe.id]) { ord = data.pending[fe.id]; }
     if (!ord) { for (oi = 0; oi < data.voids.length; oi++) { if (data.voids[oi].id === fe.id) { ord = data.voids[oi]; break; } } }
     var dts = ord ? (ord.approved_at || ord.entered_at || fe.ts) : fe.ts;
-    lines.push(nm + '  ·  $' + fe.amount);
-    lines.push(fe.id + '  ·  ' + montrealMonDay(dts));
-    if (ord && ord.items) { lines.push(itemsToStr(ord.items)); }
-    if (ord && ord.address) { lines.push(ord.address); }
+    var seg = [nm, '$' + fe.amount, fe.id, montrealMonDay(dts)];
+    if (ord && ord.items && ord.items.length) { seg.push(itemsToStr(ord.items)); }
+    lines.push(seg.join('  ·  '));
     grand = grand + fe.amount;
   }
   lines.push('total owed: $' + grand);
@@ -410,7 +409,8 @@ _NEW_CMD_FRONTNAME = r"""function cmd_frontName(arg) {
   if (!data.front[name] || data.front[name].total === 0) { return send(name + ' has no open tab'); }
   var rec = data.front[name];
   var lines = [];
-  lines.push(name.toUpperCase() + '  ·  TAB');
+  lines.push(name.toUpperCase() + '  ·  OPEN TAB');
+  var grand = 0;
   var i;
   for (i = 0; i < rec.orders.length; i++) {
     var fe = rec.orders[i];
@@ -419,18 +419,14 @@ _NEW_CMD_FRONTNAME = r"""function cmd_frontName(arg) {
     for (oi = 0; oi < data.orders.length; oi++) { if (data.orders[oi].id === fe.id) { ord = data.orders[oi]; break; } }
     if (!ord && data.pending && data.pending[fe.id]) { ord = data.pending[fe.id]; }
     if (!ord) { for (oi = 0; oi < data.voids.length; oi++) { if (data.voids[oi].id === fe.id) { ord = data.voids[oi]; break; } } }
-    var origPrice = ord ? ord.price : null;
     var dts = ord ? (ord.approved_at || ord.entered_at || fe.ts) : fe.ts;
-    if (origPrice !== null && origPrice !== undefined && fe.amount < origPrice) {
-      lines.push(name + '  ·  $' + fe.amount + ' of $' + origPrice);
-    } else {
-      lines.push(name + '  ·  $' + fe.amount);
-    }
-    lines.push(fe.id + '  ·  ' + montrealMonDay(dts));
-    if (ord && ord.items) { lines.push(itemsToStr(ord.items)); }
-    if (ord && ord.address) { lines.push(ord.address); }
+    var seg = ['$' + fe.amount, fe.id, montrealMonDay(dts)];
+    if (ord && ord.items && ord.items.length) { seg.push(itemsToStr(ord.items)); }
+    if (ord && ord.address) { seg.push(ord.address); }
+    lines.push(seg.join('  ·  '));
+    grand = grand + fe.amount;
   }
-  lines.push('total: $' + rec.total);
+  lines.push('total owed: $' + grand);
   return send(lines.join('\n'));
 }"""
 _ns = code.index('function cmd_frontName(arg) {')
