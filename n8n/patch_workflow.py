@@ -441,7 +441,7 @@ code = code[:_ns] + _NEW_CMD_FRONTNAME + code[_ne:]
 # form-parser pending card: add a plain Maps line
 code = replace_once(code,
 "  formCardLines.push(htmlEsc(formTime || '[no time]') + '  ' + htmlEsc(formPending.address) + ' ' + mapsLink(formPending.address));",
-"  formCardLines.push(htmlEsc(formTime || '[no time]') + '  ' + htmlEsc(formPending.address) + ' ' + mapsLink(formPending.address));\n  formCardLines.push('Maps: ' + mapsUrlPlain(formPending.address));",
+"  formCardLines.push(htmlEsc(formTime || '[no time]') + '  ' + htmlEsc(formPending.address) + ' ' + mapsLink(formPending.address));\n  formCardLines.push('\\ud83d\\uddfa Maps: ' + mapsUrlPlain(formPending.address));",
 "form-card-maps")
 
 # write code back
@@ -456,7 +456,7 @@ _pr = _pr.replace(
 1)
 _pr = _pr.replace(
 "finalCardLines.push(timeStrFinal + '  ' + pending.address);",
-"finalCardLines.push(timeStrFinal + '  ' + pending.address);\nfinalCardLines.push('Maps: ' + mapsUrlPlain(pending.address));",
+"finalCardLines.push(timeStrFinal + '  ' + pending.address);\nfinalCardLines.push('\\ud83d\\uddfa Maps: ' + mapsUrlPlain(pending.address));",
 1)
 assert _pr.count('mapsUrlPlain') == 2, "parse response maps anchors"
 nodes['Parse Response']['parameters']['jsCode'] = _pr
