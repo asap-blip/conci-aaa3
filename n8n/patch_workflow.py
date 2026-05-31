@@ -344,8 +344,122 @@ if (text.indexOf('c ') !== 0 && /^\\d+$/.test((rawText || '').trim())
 }""",
 "front-reply-fallback")
 
+# --- front display detail + pending-card maps link (output only) -------------
+# read-only helpers: plain maps URL + compact "Mon DD" date (reuse montrealDateStr)
+code = replace_once(code,
+"function send(textOut) {",
+r"""function mapsUrlPlain(addr) {
+  if (!addr) { return ''; }
+  var full = addr;
+  if (!/montreal|laval|brossard|quebec|qc/i.test(addr)) { full = addr + ', Montreal, QC, Canada'; }
+  return 'https://maps.google.com/?q=' + encodeURIComponent(full);
+}
+function montrealMonDay(ts) {
+  if (!ts) { return ''; }
+  var __dp = montrealDateStr(ts).split('-');
+  var __mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return __mn[parseInt(__dp[1], 10) - 1] + ' ' + parseInt(__dp[2], 10);
+}
+function send(textOut) {""",
+"front-helpers")
+
+# look up the order behind a front entry (open order, else pending, else void)
+_NEW_CMD_FRONT = r"""function cmd_front() {
+  var entries = [];
+  var tn;
+  for (tn in data.front) {
+    if (data.front.hasOwnProperty(tn) && data.front[tn].orders) {
+      var oj;
+      for (oj = 0; oj < data.front[tn].orders.length; oj++) {
+        if (data.front[tn].orders[oj].amount > 0) { entries.push({ name: tn, fe: data.front[tn].orders[oj] }); }
+      }
+    }
+  }
+  if (entries.length === 0) { return send('no open tabs'); }
+  entries.sort(function (a, b) { return (a.fe.ts || 0) - (b.fe.ts || 0); });
+  var lines = [];
+  lines.push('OPEN TABS  ·  ' + entries.length);
+  var grand = 0;
+  var i;
+  for (i = 0; i < entries.length; i++) {
+    var nm = entries[i].name;
+    var fe = entries[i].fe;
+    var ord = null, oi;
+    for (oi = 0; oi < data.orders.length; oi++) { if (data.orders[oi].id === fe.id) { ord = data.orders[oi]; break; } }
+    if (!ord && data.pending && data.pending[fe.id]) { ord = data.pending[fe.id]; }
+    if (!ord) { for (oi = 0; oi < data.voids.length; oi++) { if (data.voids[oi].id === fe.id) { ord = data.voids[oi]; break; } } }
+    var dts = ord ? (ord.approved_at || ord.entered_at || fe.ts) : fe.ts;
+    lines.push(nm + '  ·  $' + fe.amount);
+    lines.push(fe.id + '  ·  ' + montrealMonDay(dts));
+    if (ord && ord.items) { lines.push(itemsToStr(ord.items)); }
+    if (ord && ord.address) { lines.push(ord.address); }
+    grand = grand + fe.amount;
+  }
+  lines.push('total owed: $' + grand);
+  return send(lines.join('\n'));
+}"""
+_fs = code.index('function cmd_front() {')
+_fe = code.index('\n}', _fs) + len('\n}')
+assert 'OPEN TABS' in code[_fs:_fe], "cmd_front anchor drift"
+code = code[:_fs] + _NEW_CMD_FRONT + code[_fe:]
+
+_NEW_CMD_FRONTNAME = r"""function cmd_frontName(arg) {
+  var parts = arg.split(/\s+/);
+  if (parts.length === 0 || !parts[0]) { return send('format: c front <name>'); }
+  var name = parts[0];
+  if (!data.front[name] || data.front[name].total === 0) { return send(name + ' has no open tab'); }
+  var rec = data.front[name];
+  var lines = [];
+  lines.push(name.toUpperCase() + '  ·  TAB');
+  var i;
+  for (i = 0; i < rec.orders.length; i++) {
+    var fe = rec.orders[i];
+    if (!(fe.amount > 0)) { continue; }
+    var ord = null, oi;
+    for (oi = 0; oi < data.orders.length; oi++) { if (data.orders[oi].id === fe.id) { ord = data.orders[oi]; break; } }
+    if (!ord && data.pending && data.pending[fe.id]) { ord = data.pending[fe.id]; }
+    if (!ord) { for (oi = 0; oi < data.voids.length; oi++) { if (data.voids[oi].id === fe.id) { ord = data.voids[oi]; break; } } }
+    var origPrice = ord ? ord.price : null;
+    var dts = ord ? (ord.approved_at || ord.entered_at || fe.ts) : fe.ts;
+    if (origPrice !== null && origPrice !== undefined && fe.amount < origPrice) {
+      lines.push(name + '  ·  $' + fe.amount + ' of $' + origPrice);
+    } else {
+      lines.push(name + '  ·  $' + fe.amount);
+    }
+    lines.push(fe.id + '  ·  ' + montrealMonDay(dts));
+    if (ord && ord.items) { lines.push(itemsToStr(ord.items)); }
+    if (ord && ord.address) { lines.push(ord.address); }
+  }
+  lines.push('total: $' + rec.total);
+  return send(lines.join('\n'));
+}"""
+_ns = code.index('function cmd_frontName(arg) {')
+_ne = code.index('\n}', _ns) + len('\n}')
+assert 'has no open tab' in code[_ns:_ne], "cmd_frontName anchor drift"
+code = code[:_ns] + _NEW_CMD_FRONTNAME + code[_ne:]
+
+# form-parser pending card: add a plain Maps line
+code = replace_once(code,
+"  formCardLines.push(htmlEsc(formTime || '[no time]') + '  ' + htmlEsc(formPending.address) + ' ' + mapsLink(formPending.address));",
+"  formCardLines.push(htmlEsc(formTime || '[no time]') + '  ' + htmlEsc(formPending.address) + ' ' + mapsLink(formPending.address));\n  formCardLines.push('Maps: ' + mapsUrlPlain(formPending.address));",
+"form-card-maps")
+
 # write code back
 nodes['Code']['parameters']['jsCode'] = code
+
+# --- Parse Response (Claude-path pending card): maps helper + Maps line -------
+_pr = nodes['Parse Response']['parameters']['jsCode']
+_pr = _pr.replace(
+"function timeLabel(v) { return v || '[no time]'; }",
+"function timeLabel(v) { return v || '[no time]'; }\n"
+"function mapsUrlPlain(addr) { if (!addr) { return ''; } var full = addr; if (!/montreal|laval|brossard|quebec|qc/i.test(addr)) { full = addr + ', Montreal, QC, Canada'; } return 'https://maps.google.com/?q=' + encodeURIComponent(full); }",
+1)
+_pr = _pr.replace(
+"finalCardLines.push(timeStrFinal + '  ' + pending.address);",
+"finalCardLines.push(timeStrFinal + '  ' + pending.address);\nfinalCardLines.push('Maps: ' + mapsUrlPlain(pending.address));",
+1)
+assert _pr.count('mapsUrlPlain') == 2, "parse response maps anchors"
+nodes['Parse Response']['parameters']['jsCode'] = _pr
 
 # --- 9. Callback handler: handle new_order:freeform|form --------------------
 cb = nodes['Callback Handler']['parameters']['jsCode']
