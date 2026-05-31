@@ -530,6 +530,130 @@ code = replace_once(code,
 "  lines.push(itemsToStr(voidOrd.items) + '  ·  ' + (voidOrd.time || '[no time]'));\n  lines.push('Driver: ' + (voidOrd.driver || '—'));",
 "void-driver")
 
+# === inventory split: Main / T / FISTON buckets + computed in-jobs ===========
+# bootstrap two new on-hand buckets (Main reuses the existing data.inventory)
+code = replace_once(code,
+"  data.inventory = { c:0, '50c':0, p:0, '50p':0, b:0, '50k':0, k:0, m:0, s:0 };",
+"  data.inventory = { c:0, '50c':0, p:0, '50p':0, b:0, '50k':0, k:0, m:0, s:0 };\n  data.inv_t = {};\n  data.inv_fiston = {};",
+"inv-bootstrap")
+code = replace_once(code,
+"if (!data.ui_prompts) { data.ui_prompts = {}; }",
+"if (!data.ui_prompts) { data.ui_prompts = {}; }\nif (!data.inv_t) { data.inv_t = {}; }\nif (!data.inv_fiston) { data.inv_fiston = {}; }",
+"inv-guards")
+
+# replace fmtInv with bucket-aware stock helpers (on hand - in jobs = left)
+_NEW_FMT = r"""function stockBucket(key) {
+  return key === 't' ? data.inv_t : (key === 'fiston' ? data.inv_fiston : data.inventory);
+}
+function driverBucketKey(driver) {
+  return driver === 'T' ? 't' : (driver === 'FISTON' ? 'fiston' : 'main');
+}
+// in jobs = sum over ACTIVE APPROVED orders only (data.orders); pending excluded,
+// voided excluded (they are not in data.orders) -> auto-restore, no double-count.
+function inJobsFor(bucketKey) {
+  var jobs = {}; var i, j;
+  for (i = 0; i < data.orders.length; i++) {
+    var o = data.orders[i];
+    if (bucketKey !== null && driverBucketKey(o.driver) !== bucketKey) { continue; }
+    for (j = 0; j < o.items.length; j++) {
+      jobs[o.items[j].product] = (jobs[o.items[j].product] || 0) + o.items[j].qty;
+    }
+  }
+  return jobs;
+}
+function fmtStockLines(title, onh, jobs) {
+  var lines = [title, 'on hand - in jobs = left', ''];
+  var p, any = false;
+  for (p = 0; p < validProducts.length; p++) {
+    var prod = validProducts[p];
+    var oh = onh[prod] || 0, ij = jobs[prod] || 0;
+    if (oh === 0 && ij === 0) { continue; }
+    lines.push(prod + ' · ' + oh + ' - ' + ij + ' = ' + (oh - ij));
+    any = true;
+  }
+  if (!any) { lines.push('(empty)'); }
+  return lines.join('\n');
+}
+function fmtStock(title, bucketKey) {
+  return fmtStockLines(title, stockBucket(bucketKey), inJobsFor(bucketKey));
+}
+function fmtStockTotal() {
+  var onh = {}, p;
+  for (p = 0; p < validProducts.length; p++) {
+    var prod = validProducts[p];
+    onh[prod] = (data.inventory[prod] || 0) + (data.inv_t[prod] || 0) + (data.inv_fiston[prod] || 0);
+  }
+  return fmtStockLines('TOTAL STOCK', onh, inJobsFor(null));
+}
+function fmtInv() { return fmtStock('MAIN STOCK', 'main'); }"""
+_is = code.index('function fmtInv() {')
+_ie = code.index('\n}', _is) + len('\n}')
+assert 'INVENTORY' in code[_is:_ie], 'fmtInv anchor drift'
+code = code[:_is] + _NEW_FMT + code[_ie:]
+
+# bucket views + transfer/return handlers (inserted before the command tables)
+code = replace_once(code,
+"var exactCommands = {",
+r"""function cmd_invT() { return send(fmtStock('T STOCK', 't')); }
+function cmd_invFiston() { return send(fmtStock('FISTON STOCK', 'fiston')); }
+function cmd_invTotal() { return send(fmtStockTotal()); }
+
+// transfer moves on-hand between buckets only (total unchanged).
+// dir 'out' = Main -> driver ; dir 'in' = driver -> Main.
+function transferMove(arg, dir) {
+  var parts = (arg || '').split(/\s+/);
+  var who = parts[0];
+  var bucketKey = who === 't' ? 't' : (who === 'fiston' ? 'fiston' : null);
+  if (!bucketKey) { return send('format: transfer <t|fiston> c=5 p=2'); }
+  var src = dir === 'out' ? data.inventory : stockBucket(bucketKey);
+  var dst = dir === 'out' ? stockBucket(bucketKey) : data.inventory;
+  var srcName = dir === 'out' ? 'Main' : who.toUpperCase();
+  var moves = [], i;
+  for (i = 1; i < parts.length; i++) {
+    var kv = parts[i].split('=');
+    var k = kv[0], v = parseInt(kv[1], 10);
+    if (validProducts.indexOf(k) >= 0 && !isNaN(v) && v > 0) {
+      if ((src[k] || 0) < v) { return send('not enough ' + k + ' in ' + srcName + ' (have ' + (src[k] || 0) + ')'); }
+      moves.push({ k: k, v: v });
+    }
+  }
+  if (moves.length === 0) { return send('nothing to move. format: transfer <t|fiston> c=5'); }
+  for (i = 0; i < moves.length; i++) {
+    src[moves[i].k] = (src[moves[i].k] || 0) - moves[i].v;
+    dst[moves[i].k] = (dst[moves[i].k] || 0) + moves[i].v;
+  }
+  pushLog(dir === 'out' ? 'stock_transfer' : 'stock_return', { bucket: bucketKey, raw: arg });
+  return send(fmtStock(bucketKey === 't' ? 'T STOCK' : 'FISTON STOCK', bucketKey));
+}
+function cmd_transfer(arg) { return transferMove(arg, 'out'); }
+function cmd_return(arg) { return transferMove(arg, 'in'); }
+
+var exactCommands = {""",
+"inv-bucket-handlers")
+
+# cmd_undo: no inventory restock (in-jobs is computed from active orders)
+code = replace_once(code,
+"""    var i;
+    for (i = 0; i < ord.items.length; i++) {
+      data.inventory[ord.items[i].product] = (data.inventory[ord.items[i].product] || 0) + ord.items[i].qty;
+    }""",
+"    // inventory: in-jobs is computed from active orders; undo needs no restock",
+"undo-no-restock")
+
+# command tables: bucket views + transfer/return
+code = replace_once(code,
+"  'c inv reset':        cmd_invResetAll,",
+"  'c inv reset':        cmd_invResetAll,\n  'c inv main':         cmd_inv,\n  'c inv t':            cmd_invT,\n  'c inv fiston':       cmd_invFiston,\n  'c inv total':        cmd_invTotal,",
+"inv-exact")
+code = replace_once(code,
+"  ['c inv reset ',       cmd_invResetOne],",
+"  ['c inv reset ',       cmd_invResetOne],\n  ['c transfer ',        cmd_transfer],\n  ['c return ',          cmd_return],",
+"inv-prefix")
+code = replace_once(code,
+"'cmd','commands','new','purge'];",
+"'cmd','commands','new','purge','transfer','return'];",
+"inv-heads")
+
 # write code back
 nodes['Code']['parameters']['jsCode'] = code
 
@@ -767,6 +891,54 @@ cb = replace_once(cb,
 "    edit_markup_text: editMarkupText,   // driver: drives Has Edit Markup? / Edit Card With Buttons HTTP\n"
 "    edit_markup: editMarkup",
 "cb-driver-return")
+
+# inventory split: in-jobs is computed from active orders -> drop the order-side
+# decrement (approve / front) and restore (void / edit). No double-restore.
+cb = replace_once(cb,
+r"""    for (i = 0; i < pending.items.length; i++) {
+      var p = pending.items[i].product;
+      var q = pending.items[i].qty;
+      if (data.inventory[p] === undefined) { data.inventory[p] = 0; }
+      data.inventory[p] = data.inventory[p] - q;
+    }""",
+"    // inventory: in-jobs computed from active orders; no decrement on approve",
+"cb-inv-approve")
+cb = replace_once(cb,
+r"""    for (fi = 0; fi < pp.items.length; fi++) {
+      var fp = pp.items[fi].product;
+      var fq = pp.items[fi].qty;
+      if (data.inventory[fp] === undefined) { data.inventory[fp] = 0; }
+      data.inventory[fp] = data.inventory[fp] - fq;
+    }""",
+"    // inventory: in-jobs computed from active orders; no decrement on front",
+"cb-inv-front")
+cb = replace_once(cb,
+r"""      for (voi2 = 0; voi2 < voidedOrder.items.length; voi2++) {
+        var voidProd = voidedOrder.items[voi2].product;
+        var voidQty = voidedOrder.items[voi2].qty;
+        if (data.inventory[voidProd] === undefined) { data.inventory[voidProd] = 0; }
+        data.inventory[voidProd] = data.inventory[voidProd] + voidQty;
+      }""",
+"      // inventory: voided order leaves data.orders -> left auto-restores (computed)",
+"cb-inv-void")
+cb = replace_once(cb,
+r"""      for (bi = 0; bi < beforeE.items.length; bi++) {
+        var bp = beforeE.items[bi].product;
+        var bq = beforeE.items[bi].qty;
+        if (data.inventory[bp] === undefined) { data.inventory[bp] = 0; }
+        data.inventory[bp] = data.inventory[bp] + bq;
+      }""",
+"      // inventory: in-jobs recomputed from the edited order items (no restock)",
+"cb-inv-edit-before")
+cb = replace_once(cb,
+r"""      for (ai = 0; ai < afterE.items.length; ai++) {
+        var ap = afterE.items[ai].product;
+        var aq = afterE.items[ai].qty;
+        if (data.inventory[ap] === undefined) { data.inventory[ap] = 0; }
+        data.inventory[ap] = data.inventory[ap] - aq;
+      }""",
+"      // inventory: in-jobs recomputed from the edited order items (no decrement)",
+"cb-inv-edit-after")
 
 nodes['Callback Handler']['parameters']['jsCode'] = cb
 

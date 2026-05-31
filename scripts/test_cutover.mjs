@@ -112,7 +112,11 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
   check('approve commits order', store.doc.orders.some((o) => o.id === tok), store.doc.orders.map(o=>o.id));
   check('approve adds price to cash', store.doc.wallet.cash === cashBefore + 65, store.doc.wallet.cash);
   check('approve accrues pay +20', store.doc.wallet.pay === payBefore + 20, store.doc.wallet.pay);
-  check('approve decremented inventory 50p', store.doc.inventory['50p'] === -2, store.doc.inventory['50p']);
+  // inventory split: approve no longer decrements Main; in-jobs is computed
+  const _itv = await run(ROUTER, msg('inv t'));
+  check('approve -> computed in-jobs (no Main decrement)',
+    (store.doc.inventory['50p'] || 0) === 0 && /50p · 0 - 2 = -2/.test(_itv[0].json.text),
+    { main50p: store.doc.inventory['50p'], t: _itv[0].json.text });
   check('approve audited', store.events.some((e) => e.action === 'order_approved'));
 
   // 7b. FREE-FORM end-to-end through Parse Response (the bridge split-brain fix):
@@ -177,6 +181,31 @@ const txt = (r) => (r && r[0] && r[0].json && (r[0].json.text || '')) || '';
   const dcommit = store.doc.orders.find((o) => o.id === dtok);
   check('approved order persists driver', !!dcommit && dcommit.driver === 'FISTON', dcommit);
   check('driver shows in jobs', /FISTON/.test(await run(ROUTER, msg('jobs')).then((r) => r[0].json.text)));
+
+  // 12. INVENTORY split: buckets, transfer, computed in-jobs, void auto-restore
+  store.doc.orders = [];
+  store.doc.inventory = { c: 10 }; store.doc.inv_t = {}; store.doc.inv_fiston = {};
+  const mv = await run(ROUTER, msg('inv'));
+  check('main stock view', /MAIN STOCK/.test(mv[0].json.text) && /c · 10 - 0 = 10/.test(mv[0].json.text), mv[0].json.text);
+  const tr = await run(ROUTER, msg('transfer t c=4'));
+  check('transfer Main->T', store.doc.inventory.c === 6 && store.doc.inv_t.c === 4, { main: store.doc.inventory.c, t: store.doc.inv_t.c });
+  check('T stock after transfer', /T STOCK/.test(tr[0].json.text) && /c · 4 - 0 = 4/.test(tr[0].json.text), tr[0].json.text);
+  check('total unchanged by transfer', /c · 10 - 0 = 10/.test((await run(ROUTER, msg('inv total')))[0].json.text));
+  const io = await run(ROUTER, msg('zed\norder: 1 c\naddress: 9 test\nprice: 10'));
+  const iotok = io[0].json.token;
+  await run(CALLBACK, cbq('setdrv:' + iotok + ':T', 9200));
+  await run(CALLBACK, cbq('approve:' + iotok, 9200));
+  check('T in-jobs counts approved order', /c · 4 - 1 = 3/.test((await run(ROUTER, msg('inv t')))[0].json.text));
+  check('Main not consumed by T order', /c · 6 - 0 = 6/.test((await run(ROUTER, msg('inv')))[0].json.text));
+  check('total reflects in-jobs', /c · 10 - 1 = 9/.test((await run(ROUTER, msg('inv total')))[0].json.text));
+  const vc = await run(ROUTER, msg('void ' + iotok));
+  const vtok = vc[0].json.token;
+  await run(CALLBACK, cbq('apply_void:' + vtok, 9200));
+  check('void auto-restores T (computed)', /c · 4 - 0 = 4/.test((await run(ROUTER, msg('inv t')))[0].json.text));
+  await run(CALLBACK, cbq('apply_void:' + vtok, 9200)); // repeat
+  check('no double-restore on repeat void', /c · 4 - 0 = 4/.test((await run(ROUTER, msg('inv t')))[0].json.text));
+  await run(ROUTER, msg('return t c=2'));
+  check('return T->Main', store.doc.inv_t.c === 2 && store.doc.inventory.c === 8, { t: store.doc.inv_t.c, main: store.doc.inventory.c });
 
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
