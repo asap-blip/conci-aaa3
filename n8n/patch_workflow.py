@@ -284,13 +284,14 @@ return [{
 # --- 8. Help text: prefix-free, Claude removed -------------------------------
 new_help = (
 "function cmd_help() {\n"
-"  return send('OPERATOR COMMANDS\\n\\n"
-"NEW ORDER\\n  new                       open intake menu (free-form / form)\\n  free-form: maya 2 50p 65 10pm 4520 papineau\\n  form:  maya / order: / address: / price: / time:\\n\\n"
-"WALLET\\n  wallet                    cash, pay, total, front out\\n  add 200                   deposit cash\\n  sub 50                    withdraw cash\\n  paid jay [amt]            client paid (full or partial)\\n\\n"
-"JOBS\\n  jobs                      list active orders\\n  edit ord-N <new>          update order\\n  cancel ord-N              drop pending order\\n  void ord-N                reverse approved order\\n  undo                      reverse last approval (5min)\\n  summary                   paste-ready report\\n  backup                    send state JSON to DM\\n\\n"
-"FRONT\\n  front                     list open tabs\\n  front <name>              one client tab\\n  front ord-N <amt>         mark order fronted\\n  front void <name> ord-N   forgive a fronted order\\n\\n"
-"CLIENTS\\n  clients                   list clients\\n  client jay [balance]      client history / balance\\n\\n"
-"INVENTORY\\n  inv                       show stock\\n  inv add c=10 p=5          add to stock\\n  inv set c=8               overwrite stock\\n  inv reset [product]       zero stock\\n\\n"
+"  return send('OPERATOR COMMANDS\\n(type a command, or tap the keyboard \\u2014 send kb to show it)\\n\\n"
+"NEW ORDER\\n  new                       intake menu (free-form / form)\\n  free-form: maya 2 50p 65 10pm 4520 papineau\\n  form (multi-line):\\n    maya\\n    order: 2 50p\\n    address: 4520 papineau\\n    price: 65        (optional)\\n    time: 10pm       (optional, blank = asap)\\n  on the card: \\u2705 approve \\u00b7 \\ud83d\\udfe7 front \\u00b7 \\u274c cancel\\n\\n"
+"JOBS\\n  jobs                      list active orders\\n  edit ord-N <new>          update an order\\n  cancel ord-N              drop a pending order\\n  void ord-N                reverse an approved order\\n  undo                      reverse last approval (5min)\\n  jobs reset                wipe approved orders (confirm)\\n  jobs reset hard           wipe orders + reset ord-N (confirm)\\n  summary                   paste-ready report\\n  backup                    state JSON to DM\\n\\n"
+"WALLET\\n  wallet                    cash, pay, total, front out\\n  wallet add <n>            deposit cash\\n  wallet sub <n>            withdraw cash\\n  wallet set <n>            overwrite cash\\n  wallet reset              cash to 0\\n  wallet pay add/sub/set <n>  adjust pay\\n  wallet pay reset          pay to 0\\n  wallet paid <name> [amt]  client paid (full/partial)\\n  (keyboard Add / Sub / Paid ask for the value as a prompt)\\n\\n"
+"FRONT\\n  front                     list open tabs\\n  front <name>              one client tab\\n  front ord-N <amt>         mark order fronted\\n  front void <name> ord-N   forgive a fronted order\\n  (or tap \\ud83d\\udfe7 on an order card, then send the amount)\\n\\n"
+"CLIENTS\\n  clients                   list clients\\n  client <name> [balance]   history / outstanding balance\\n\\n"
+"INVENTORY\\n  inv                       show stock\\n  inv add c=10 p=5          add to stock\\n  inv set c=8               overwrite stock\\n  inv reset [product]       zero all stock, or one product\\n\\n"
+"KEYBOARD\\n  kb / keyboard             show the button pad\\n\\n"
 "DISPATCH\\n  eta <address>             real-time ETA');\n"
 "}"
 )
