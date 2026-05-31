@@ -1,0 +1,276 @@
+{
+  "name": "concierge-dispatch-reset (two-driver ETA core)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "concierge-loc-lNZGT7cwRyg",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "reset-loc-webhook-0000000000000001",
+      "name": "Location Ping Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "concierge-loc-lNZGT7cwRyg"
+    },
+    {
+      "parameters": {
+        "jsCode": "// LOCATION PING HANDLER v1.0.0 (two-driver reset)\n// Driver identity comes from the SECRET, not a spoofable driver field.\n// Storage upgraded from data.location -> data.locations_by_driver[driver].\n// Env: CONCIERGE_PING_SECRET_T, CONCIERGE_PING_SECRET_FISTON\n\nvar SECRET_T = $env.CONCIERGE_PING_SECRET_T;\nvar SECRET_FISTON = $env.CONCIERGE_PING_SECRET_FISTON;\n\nvar data = $getWorkflowStaticData('global');\nif (!data.initialized) {\n  data.locations_by_driver = {};\n  data.ping_log = [];\n  data.initialized = true;\n}\nif (!data.locations_by_driver) { data.locations_by_driver = {}; }\nif (!data.ping_log) { data.ping_log = []; }\n\nvar body = $json.body || $json;\nvar nowTs = Math.floor(Date.now() / 1000);\n\n// secret -> driver (identity by secret; any body.driver is ignored on the ping path)\nvar secretMap = {};\nif (SECRET_T) { secretMap[SECRET_T] = 'T'; }\nif (SECRET_FISTON) { secretMap[SECRET_FISTON] = 'FISTON'; }\n\nvar driver = (body && body.auth != null) ? secretMap[body.auth] : undefined;\n\nif (!driver) {\n  data.ping_log.push({ ts: nowTs, status: 'rejected_auth' });\n  if (data.ping_log.length > 100) { data.ping_log = data.ping_log.slice(-100); }\n  return [{ json: { status: 401, body: { ok: false, error: 'unauthorized' } } }];\n}\n\nvar lat = parseFloat(body.lat);\nvar lng = parseFloat(body.lng);\nif (isNaN(lat) || isNaN(lng)) {\n  data.ping_log.push({ ts: nowTs, status: 'rejected_payload', driver: driver, reason: 'bad_coords' });\n  if (data.ping_log.length > 100) { data.ping_log = data.ping_log.slice(-100); }\n  return [{ json: { status: 400, body: { ok: false, error: 'bad coordinates' } } }];\n}\nif (lat < -90 || lat > 90 || lng < -180 || lng > 180) {\n  data.ping_log.push({ ts: nowTs, status: 'rejected_payload', driver: driver, reason: 'coords_out_of_range' });\n  if (data.ping_log.length > 100) { data.ping_log = data.ping_log.slice(-100); }\n  return [{ json: { status: 400, body: { ok: false, error: 'coordinates out of range' } } }];\n}\n\nvar source = (body.source || 'unknown').toString().toLowerCase();\nif (['iphone', 'watch', 'manual', 'shortcut'].indexOf(source) === -1) { source = 'unknown'; }\n\nvar previousLocation = data.locations_by_driver[driver] || null;\nvar ageSinceLastPing = previousLocation ? (nowTs - previousLocation.ts) : null;\n\ndata.locations_by_driver[driver] = { lat: lat, lng: lng, ts: nowTs, source: source, driver: driver, notification_count: 0 };\n\ndata.ping_log.push({ ts: nowTs, status: 'accepted', driver: driver, source: source, age_since_last: ageSinceLastPing });\nif (data.ping_log.length > 100) { data.ping_log = data.ping_log.slice(-100); }\n\nreturn [{ json: {\n  status: 200,\n  body: { ok: true, driver: driver, received_at: nowTs, age_since_last: ageSinceLastPing, location: { lat: lat, lng: lng, source: source } }\n} }];"
+      },
+      "id": "reset-loc-store-00000000000000001",
+      "name": "Validate + Store1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "reset-loc-respond-0000000000001",
+      "name": "Respond to Location Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "concierge-eta-RDnNLM5WA1w",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "reset-eta-webhook-0000000000000001",
+      "name": "ETA Request Webhook (HTTP)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        320
+      ],
+      "webhookId": "concierge-eta-RDnNLM5WA1w"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ETA REQUEST NORMALIZER v1.0.0 (two-driver reset)\n// Validates the shared dispatch secret (consumer-side), accepts an address,\n// and an optional driver selector ('T' | 'FISTON', default 'T').\n// Env: CONCIERGE_DISPATCH_SHARED_SECRET\n\nvar SHARED_SECRET = $env.CONCIERGE_DISPATCH_SHARED_SECRET;\nvar DRIVERS = ['T', 'FISTON'];\n\nvar body = $json.body || $json;\nvar auth = body.auth;\nvar address = body.address;\n\nif (!SHARED_SECRET || auth !== SHARED_SECRET) {\n  return [{ json: { ok: false, short_circuit: true, error: 'unauthorized', _http_status: 401 } }];\n}\nif (!address || !address.toString().trim()) {\n  return [{ json: { ok: false, short_circuit: true, error: 'no address provided', _http_status: 400 } }];\n}\n\nvar driver = (body.driver || 'T').toString().trim().toUpperCase();\nif (DRIVERS.indexOf(driver) === -1) {\n  return [{ json: { ok: false, short_circuit: true, error: 'unknown driver \\\"' + driver + '\\\" (expected T or FISTON)', _http_status: 400 } }];\n}\n\nreturn [{ json: { address: address.toString().trim(), driver: driver } }];"
+      },
+      "id": "reset-eta-normalize-000000000001",
+      "name": "Normalize Webhook Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ETA REQUEST BUILDER v1.0.0 (two-driver reset)\n// Reads data.locations_by_driver[driver] + caller address. Google key from env.\n// Env: GOOGLE_MAPS_API_KEY\n\nvar GOOGLE_API_KEY = $env.GOOGLE_MAPS_API_KEY;\nvar data = $getWorkflowStaticData('global');\nif (!data.locations_by_driver) { data.locations_by_driver = {}; }\n\nvar input = $json;\n\n// Pass through short-circuits from upstream (webhook auth failures, etc).\nif (input.short_circuit === true) {\n  return [{ json: input }];\n}\n\nvar address = (input.address || '').toString().trim();\nvar driver = (input.driver || 'T').toString().trim().toUpperCase();\nvar nowTs = Math.floor(Date.now() / 1000);\n\nif (!address) {\n  return [{ json: { ok: false, error: 'no address provided', short_circuit: true } }];\n}\nif (!GOOGLE_API_KEY) {\n  return [{ json: { ok: false, error: 'google api key not configured', short_circuit: true } }];\n}\n\nvar loc = data.locations_by_driver[driver];\nif (!loc) {\n  return [{ json: { ok: false, error: 'no location ping yet for driver ' + driver + ' -- tap concierge ping on phone', short_circuit: true } }];\n}\n\nvar locationAgeSec = nowTs - loc.ts;\nvar locationStale = locationAgeSec > 900;\n\nvar destAddress = address;\nif (!/montreal|laval|brossard|quebec|qc|montréal/i.test(destAddress)) {\n  destAddress = destAddress + ', Montreal, QC, Canada';\n}\n\nvar url = 'https://maps.googleapis.com/maps/api/distancematrix/json' +\n  '?origins=' + loc.lat + ',' + loc.lng +\n  '&destinations=' + encodeURIComponent(destAddress) +\n  '&mode=driving' +\n  '&departure_time=now' +\n  '&units=metric' +\n  '&region=ca' +\n  '&key=' + GOOGLE_API_KEY;\n\nreturn [{ json: {\n  ok: true,\n  short_circuit: false,\n  url: url,\n  driver: driver,\n  address_input: address,\n  address_resolved: destAddress,\n  origin: { lat: loc.lat, lng: loc.lng, source: loc.source, driver: driver },\n  location_age_seconds: locationAgeSec,\n  location_stale: locationStale,\n  requested_at: nowTs\n} }];"
+      },
+      "id": "reset-eta-build-0000000000000001",
+      "name": "Build ETA Request1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "short-circuit-check",
+              "leftValue": "={{ $json.short_circuit }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "reset-eta-if-00000000000000001",
+      "name": "Should Call Google?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "reset-eta-http-000000000000001",
+      "name": "Call Distance Matrix1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ETA RESPONSE PARSER v1.0.0 (two-driver reset)\n// Response contract preserved from the old core; only `driver` is added.\n\nvar BUFFER_MIN = 5;\n\nvar response = $json;\nvar buildCtx = $('Build ETA Request1').item.json;\nif (response.status !== 'OK') {\n  return [{ json: { ok: false, error: 'google_api_error', google_status: response.status, google_message: response.error_message || null } }];\n}\nif (!response.rows || !response.rows[0] || !response.rows[0].elements || !response.rows[0].elements[0]) {\n  return [{ json: { ok: false, error: 'malformed_google_response', raw: response } }];\n}\nvar element = response.rows[0].elements[0];\nif (element.status !== 'OK') {\n  return [{ json: { ok: false, error: 'no_route_found', element_status: element.status, address_tried: buildCtx.address_resolved } }];\n}\nvar etaSeconds = (element.duration_in_traffic && element.duration_in_traffic.value) ? element.duration_in_traffic.value : element.duration.value;\nvar etaMinutes = Math.round(etaSeconds / 60);\nvar distanceMeters = element.distance.value;\nvar distanceKm = Math.round((distanceMeters / 1000) * 10) / 10;\nvar nowTs = Math.floor(Date.now() / 1000);\nvar arrivalTs = nowTs + etaSeconds;\nvar arrivalDate = new Date(arrivalTs * 1000);\n\nvar clientEtaMinutes = etaMinutes + BUFFER_MIN;\nvar clientArrivalDate = new Date((arrivalTs + BUFFER_MIN * 60) * 1000);\n\nfunction formatArrivalLabel(d) {\n  var fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Toronto', hour: 'numeric', minute: '2-digit', hour12: true });\n  return fmt.format(d).toLowerCase().replace(/\\s/g, '');\n}\nvar arrivalLabel = formatArrivalLabel(arrivalDate);\nvar arrivalIso = arrivalDate.toISOString();\nvar clientArrivalLabel = formatArrivalLabel(clientArrivalDate);\nvar clientArrivalIso = clientArrivalDate.toISOString();\n\nvar origin = buildCtx.origin;\nvar mapsUrl = 'https://www.google.com/maps/dir/?api=1' +\n  '&origin=' + origin.lat + ',' + origin.lng +\n  '&destination=' + encodeURIComponent(buildCtx.address_resolved) +\n  '&travelmode=driving';\nreturn [{ json: {\n  ok: true,\n  driver: buildCtx.driver,\n  eta_seconds: etaSeconds,\n  eta_minutes: etaMinutes,\n  distance_km: distanceKm,\n  distance_text: element.distance.text,\n  duration_text: (element.duration_in_traffic && element.duration_in_traffic.text) || element.duration.text,\n  arrival_iso: arrivalIso,\n  arrival_label: arrivalLabel,\n  client_eta_minutes: clientEtaMinutes,\n  client_arrival_iso: clientArrivalIso,\n  client_arrival_label: clientArrivalLabel,\n  buffer_minutes: BUFFER_MIN,\n  maps_url: mapsUrl,\n  origin: origin,\n  address_input: buildCtx.address_input,\n  address_resolved: buildCtx.address_resolved,\n  location_age_seconds: buildCtx.location_age_seconds,\n  location_stale: buildCtx.location_stale,\n  calculated_at: nowTs\n} }];"
+      },
+      "id": "reset-eta-parse-0000000000000001",
+      "name": "Parse ETA Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "reset-eta-respond-0000000000001",
+      "name": "Respond to ETA Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        320
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Location Ping Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Validate + Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate + Store1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Location Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ETA Request Webhook (HTTP)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Webhook Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "Build ETA Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build ETA Request1": {
+      "main": [
+        [
+          {
+            "node": "Should Call Google?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Call Google?1": {
+      "main": [
+        [
+          {
+            "node": "Call Distance Matrix1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to ETA Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Distance Matrix1": {
+      "main": [
+        [
+          {
+            "node": "Parse ETA Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse ETA Response1": {
+      "main": [
+        [
+          {
+            "node": "Respond to ETA Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
