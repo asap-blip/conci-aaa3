@@ -300,6 +300,49 @@ assert code[_hs:_hs+40].startswith('function cmd_help()'), "help anchor drift"
 assert 'INVENTORY' in code[_hs:_he] and 'FORM-STYLE' in code[_hs:_he], "help body drift"
 code = code[:_hs] + new_help + code[_he:]
 
+# --- front-reply fallback: bare number consumes a pending front prompt --------
+# Keeps the exact reply_to_message.message_id match as the primary path; adds a
+# chat-scoped fallback for dropped/mis-targeted reply context (esp. iOS).
+# Fires ONLY when a front_prompt is pending and the message is a lone number;
+# routes into the existing `c front ord-N <amt>` path. No other behavior changes.
+code = replace_once(code,
+"""  // No `else suppress` branch anymore: if the reply isn't a front_prompt,
+  // fall through to normal routing. iOS sticky-reply context where the
+  // user types a regular command will now reach dispatch instead of being
+  // silently swallowed (v7.5.1's bug).
+}""",
+"""  // No `else suppress` branch anymore: if the reply isn't a front_prompt,
+  // fall through to normal routing. iOS sticky-reply context where the
+  // user types a regular command will now reach dispatch instead of being
+  // silently swallowed (v7.5.1's bug).
+}
+
+// ----- front-reply fallback (dropped/mis-targeted reply context) -------------
+// The 🟧 front prompt is the only feature still relying on Telegram reply
+// context, which iOS frequently drops. When a front prompt is pending, a bare
+// positive number is taken as the front amount (most recent prompt by ts) and
+// routed into the existing `c front ord-N <amt>` path. Fires ONLY when a
+// front_prompt exists, so no other parsing or flow is affected.
+if (text.indexOf('c ') !== 0 && /^\\d+$/.test((rawText || '').trim())
+    && data.front_prompts && Object.keys(data.front_prompts).length > 0) {
+  var __fpKeys = Object.keys(data.front_prompts);
+  var __fpLatest = __fpKeys[0];
+  var __fk;
+  for (__fk = 1; __fk < __fpKeys.length; __fk++) {
+    if ((data.front_prompts[__fpKeys[__fk]].ts || 0) > (data.front_prompts[__fpLatest].ts || 0)) { __fpLatest = __fpKeys[__fk]; }
+  }
+  var __fpRec2 = data.front_prompts[__fpLatest];
+  var __fpAmt2 = parseInt((rawText || '').trim(), 10);
+  delete data.front_prompts[__fpLatest];
+  if (!isNaN(__fpAmt2) && __fpAmt2 > 0) {
+    text = 'c front ' + __fpRec2.order_id + ' ' + __fpAmt2;
+    rawText = text;
+  } else {
+    return [{ json: { chat_id: chatId, text: 'bad amount, front cancelled', is_callback: false, needs_parsing: false } }];
+  }
+}""",
+"front-reply-fallback")
+
 # write code back
 nodes['Code']['parameters']['jsCode'] = code
 
@@ -335,7 +378,10 @@ cn['jsonBody'] = cn['jsonBody'].replace('$json.raw_text.substring(2)', '$json.pa
 # --- externalize secrets out of the workflow JSON (staging/prod precondition) -
 # Telegram bot token in the 4 raw HTTP sender node URLs -> $env.TELEGRAM_BOT_TOKEN
 import re as _re
-_tok_re = _re.compile(r'bot\d+:[A-Za-z0-9_-]+')
+# Match the `bot<...>` segment of the Telegram API URL (real token OR a redacted
+# placeholder), up to the next path slash. Idempotent: re-running on an already
+# externalized URL leaves it unchanged.
+_tok_re = _re.compile(r'bot[^/"]+')
 _tok_nodes = ['Send Card HTTP', 'Send ETA Card HTTP', 'Send Snippet HTTP', 'Send Backup Document']
 for _nm in _tok_nodes:
     _u = nodes[_nm]['parameters'].get('url', '')
